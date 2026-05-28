@@ -15,6 +15,7 @@ public class LoginActivity extends AppCompatActivity {
     private Button btnLogin;
     private TextView txtGoToRegister;
     private FirebaseAuth mAuth;
+    private android.widget.ImageButton btnBackLogin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,7 +27,20 @@ public class LoginActivity extends AppCompatActivity {
         edtPassword = findViewById(R.id.edtPassword);
         btnLogin = findViewById(R.id.btnLogin);
         txtGoToRegister = findViewById(R.id.txtGoToRegister);
+        btnBackLogin = findViewById(R.id.btnBackLogin);
 
+        btnBackLogin.setOnClickListener(new android.view.View.OnClickListener() {
+            @Override
+            public void onClick(android.view.View v) {
+                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+
+                // Xóa sạch các màn hình chạy ẩn trước đó để tránh trùng lặp luồng
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+                startActivity(intent);
+                finish(); // Đóng LoginActivity lại // Đóng hoàn toàn ứng dụng một cách an toàn
+            }
+        });
         btnLogin.setOnClickListener(v -> {
             String email = edtEmail.getText().toString().trim();
             String password = edtPassword.getText().toString().trim();
