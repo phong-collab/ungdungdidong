@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import com.cloudinary.android.MediaManager;
+import com.example.travelapp.fragments.FavoritesFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.example.travelapp.R;
 import com.example.travelapp.fragments.HomeFragment;
@@ -43,7 +44,9 @@ public class MainActivity extends AppCompatActivity {
                 // Kiểm tra ID của tab được bấm để khởi tạo đúng Fragment
                 if (item.getItemId() == R.id.nav_home) {
                     selectedFragment = new HomeFragment(); // Trang chủ (Giai đoạn 3)
-                } else if (item.getItemId() == R.id.nav_orders) {
+                } else if (item.getItemId() == R.id.nav_favorites) { // <--- THÊM NHÁNH NÀY
+                    selectedFragment = new FavoritesFragment();
+                }else if (item.getItemId() == R.id.nav_orders) {
                     selectedFragment = new MyOrdersFragment(); // Lịch sử đơn hàng (Giai đoạn 6)
                 } else if (item.getItemId() == R.id.nav_profile) {
                     selectedFragment = new ProfileFragment(); // Hồ sơ cá nhân (Giai đoạn 7)

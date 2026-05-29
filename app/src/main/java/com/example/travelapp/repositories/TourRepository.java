@@ -20,8 +20,10 @@ public class TourRepository {
                     list.add(doc.toObject(TourModel.class));
                 }
                 liveData.setValue(list);
+            } else {
+                liveData.setValue(new ArrayList<>());
             }
-        });
+        }).addOnFailureListener(e -> liveData.setValue(new ArrayList<>()));
         return liveData;
     }
 }

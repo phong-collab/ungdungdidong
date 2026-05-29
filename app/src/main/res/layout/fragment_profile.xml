@@ -6,7 +6,6 @@
     android:orientation="vertical"
     android:background="#F5F5F5"
     android:padding="16dp">
-
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -69,6 +68,16 @@
         android:visibility="gone"
         android:layout_marginBottom="12dp"
         app:cornerRadius="8dp"/>
+    <Button
+        android:id="@+id/btnEditProfile"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="16dp"
+        android:text="Chỉnh sửa thông tin"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:backgroundTint="#2196F3"
+        android:textColor="@android:color/white" />
 
     <Button
         android:id="@+id/btnLogout"

@@ -51,9 +51,10 @@
 
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="center"
+            android:layout_gravity="center_vertical"
             android:paddingStart="8dp"
             android:paddingEnd="4dp">
 
@@ -61,10 +62,10 @@
                 android:id="@+id/txtStatusBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingLeft="8dp"
-                android:paddingRight="8dp"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
                 android:text="Pending"
                 android:textSize="12sp"
                 android:textColor="@android:color/white"
@@ -73,14 +74,24 @@
             <Button
                 android:id="@+id/btnReview"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
+                android:layout_height="38dp"
                 android:layout_marginTop="8dp"
                 android:text="Review"
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:contentDescription="Review booking" />
+
+            <Button
+                android:id="@+id/btnCancelBooking"
+                android:layout_width="wrap_content"
+                android:layout_height="38dp"
+                android:layout_marginTop="6dp"
+                android:text="Hủy"
+                android:textSize="13sp"
+                android:backgroundTint="#F44336"
+                android:textColor="@android:color/white"
+                android:contentDescription="Cancel booking" />
         </LinearLayout>
 
     </LinearLayout>
 
 </androidx.cardview.widget.CardView>
-

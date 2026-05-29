@@ -4,7 +4,12 @@
     <item
         android:id="@+id/nav_home"
         android:title="Trang chủ"
-        android:icon="@android:drawable/ic_menu_view" /> <item
+        android:icon="@android:drawable/ic_menu_view" />
+    <item
+        android:id="@+id/nav_favorites"
+        android:title="Yêu thích"
+        android:icon="@android:drawable/btn_star_big_on" />
+    <item
     android:id="@+id/nav_orders"
     android:title="Chuyến đi"
     android:icon="@android:drawable/ic_menu_agenda" />

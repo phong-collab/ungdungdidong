@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -16,6 +17,7 @@ import com.example.travelapp.viewmodels.TourViewModel;
 
 public class HomeFragment extends Fragment {
     private RecyclerView rvFeaturedTours;
+    private TextView txtEmptyHome;
     private TourViewModel viewModel;
 
     @Nullable
@@ -28,13 +30,14 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         rvFeaturedTours = view.findViewById(R.id.rvFeaturedTours);
+        txtEmptyHome = view.findViewById(R.id.txtEmptyHome);
         rvFeaturedTours.setLayoutManager(new LinearLayoutManager(getContext()));
 
         viewModel = new ViewModelProvider(this).get(TourViewModel.class);
         viewModel.getFeaturedToursLiveData().observe(getViewLifecycleOwner(), tours -> {
-            if (tours != null) {
-                rvFeaturedTours.setAdapter(new TourAdapter(tours));
-            }
+            boolean hasData = tours != null && !tours.isEmpty();
+            txtEmptyHome.setVisibility(hasData ? View.GONE : View.VISIBLE);
+            rvFeaturedTours.setAdapter(new TourAdapter(tours != null ? tours : java.util.Collections.emptyList()));
         });
     }
 }

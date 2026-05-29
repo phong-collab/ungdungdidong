@@ -15,12 +15,15 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.example.travelapp.R;
-import com.example.travelapp.activities.AddTourActivity; // Hoặc AdminDashboardActivity tùy bạn điều hướng
+import com.example.travelapp.activities.AddTourActivity;
 import com.example.travelapp.activities.LoginActivity;
 
 public class ProfileFragment extends Fragment {
     private TextView txtProfileName, txtProfileEmail, txtProfilePhone;
     private Button btnAdminDashboard, btnLogout;
+
+    // ĐÃ THÊM: Nút điều hướng sang trang chỉnh sửa thông tin
+    private Button btnEditProfile;
 
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
@@ -46,6 +49,9 @@ public class ProfileFragment extends Fragment {
         btnAdminDashboard = view.findViewById(R.id.btnAdminDashboard);
         btnLogout = view.findViewById(R.id.btnLogout);
 
+        // ĐÃ THÊM: Ánh xạ nút Chỉnh sửa thông tin
+        btnEditProfile = view.findViewById(R.id.btnEditProfile);
+
         // Kiểm tra chắc chắn xem người dùng đã đăng nhập chưa
         if (mAuth.getCurrentUser() != null) {
             String userId = mAuth.getCurrentUser().getUid();
@@ -66,6 +72,19 @@ public class ProfileFragment extends Fragment {
             Intent intent = new Intent(getContext(), AddTourActivity.class);
             startActivity(intent);
         });
+
+        // 4. ĐÃ THÊM: Xử lý sự kiện chuyển sang trang sửa Profile khi click nút
+        if (btnEditProfile != null) {
+            btnEditProfile.setOnClickListener(v -> {
+                getParentFragmentManager().beginTransaction()
+                        // Thay thế vùng chứa bằng EditProfileFragment mới tạo ở bước trước
+                        // LƯU Ý: Đảm bảo R.id.fragment_container khớp 100% với ID FrameLayout bọc Fragment trong activity_main.xml của bạn
+                        .replace(R.id.fragment_container, new EditProfileFragment())
+                        // Đẩy vào BackStack để khi bấm Back trên điện thoại sẽ lùi lại trang Profile thay vì đóng app
+                        .addToBackStack(null)
+                        .commit();
+            });
+        }
     }
 
     // Hàm lấy dữ liệu User động từ Cloud Firestore
