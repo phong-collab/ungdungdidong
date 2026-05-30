@@ -15,51 +15,84 @@ import com.example.travelapp.fragments.ProfileFragment;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.example.travelapp.fragments.AdminCategoriesFragment;
+import com.example.travelapp.fragments.AdminReviewsFragment;
+import com.example.travelapp.fragments.AdminToursFragment;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+
 public class MainActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigation;
+    private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main); // Kết nối với file XML giao diện ở trên
+        setContentView(R.layout.activity_main);
 
-        // 1. Khởi tạo cấu hình Cloudinary (Dành cho việc upload ảnh của Admin ở Giai đoạn 7)
+        mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+
         initCloudinary();
-
-        // 2. Ánh xạ thanh điều hướng bằng findViewById()
         bottomNavigation = findViewById(R.id.bottom_navigation);
 
-        // 3. Đặt màn hình mặc định đầu tiên khi mở app là Trang chủ (HomeFragment)
+        checkUserRole();
+
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new HomeFragment()).commit();
         }
 
-        // 4. Lắng nghe sự kiện click chọn các tab trên thanh Menu để tráo đổi Fragment
-        bottomNavigation.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                Fragment selectedFragment = null;
+        bottomNavigation.setOnNavigationItemSelectedListener(item -> {
+            Fragment selectedFragment = null;
+            int id = item.getItemId();
 
-                // Kiểm tra ID của tab được bấm để khởi tạo đúng Fragment
-                if (item.getItemId() == R.id.nav_home) {
-                    selectedFragment = new HomeFragment(); // Trang chủ (Giai đoạn 3)
-                } else if (item.getItemId() == R.id.nav_favorites) { // <--- THÊM NHÁNH NÀY
-                    selectedFragment = new FavoritesFragment();
-                }else if (item.getItemId() == R.id.nav_orders) {
-                    selectedFragment = new MyOrdersFragment(); // Lịch sử đơn hàng (Giai đoạn 6)
-                } else if (item.getItemId() == R.id.nav_profile) {
-                    selectedFragment = new ProfileFragment(); // Hồ sơ cá nhân (Giai đoạn 7)
-                }
-
-                // Thực hiện tráo đổi Fragment vào ô chứa xml
-                if (selectedFragment != null) {
-                    getSupportFragmentManager().beginTransaction()
-                            .replace(R.id.fragment_container, selectedFragment).commit();
-                }
-                return true;
+            if (id == R.id.nav_home) {
+                selectedFragment = new HomeFragment();
+            } else if (id == R.id.nav_favorites) {
+                selectedFragment = new FavoritesFragment();
+            } else if (id == R.id.nav_orders) {
+                selectedFragment = new MyOrdersFragment();
+            } else if (id == R.id.nav_profile) {
+                selectedFragment = new ProfileFragment();
+            } else if (id == R.id.nav_admin_tours) {
+                selectedFragment = new AdminToursFragment();
+            } else if (id == R.id.nav_admin_categories) {
+                selectedFragment = new AdminCategoriesFragment();
+            } else if (id == R.id.nav_admin_reviews) {
+                selectedFragment = new AdminReviewsFragment();
             }
+
+            if (selectedFragment != null) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, selectedFragment).commit();
+            }
+            return true;
         });
+    }
+
+    private void checkUserRole() {
+        if (mAuth.getCurrentUser() == null) {
+            bottomNavigation.getMenu().clear();
+            bottomNavigation.inflateMenu(R.menu.menu_client);
+            return;
+        }
+
+        db.collection("users").document(mAuth.getCurrentUser().getUid()).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    String role = documentSnapshot.getString("role");
+                    bottomNavigation.getMenu().clear();
+                    if ("admin".equals(role)) {
+                        bottomNavigation.inflateMenu(R.menu.menu_admin);
+                    } else {
+                        bottomNavigation.inflateMenu(R.menu.menu_client);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    bottomNavigation.getMenu().clear();
+                    bottomNavigation.inflateMenu(R.menu.menu_client);
+                });
     }
 
     // Hàm thiết lập thông số Cloudinary
