@@ -13,11 +13,16 @@ public class TourRepository {
 
     public LiveData<List<TourModel>> getFeaturedTours() {
         MutableLiveData<List<TourModel>> liveData = new MutableLiveData<>();
+        liveData.setValue(new ArrayList<>());
         db.collection("tours").whereEqualTo("isFeatured", true).get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 List<TourModel> list = new ArrayList<>();
                 for (QueryDocumentSnapshot doc : task.getResult()) {
-                    list.add(doc.toObject(TourModel.class));
+                    TourModel tour = doc.toObject(TourModel.class);
+                    if (tour != null) {
+                        tour.setId(doc.getId());
+                        list.add(tour);
+                    }
                 }
                 liveData.setValue(list);
             } else {

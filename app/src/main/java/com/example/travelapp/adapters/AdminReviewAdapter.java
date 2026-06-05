@@ -39,8 +39,19 @@ public class AdminReviewAdapter extends RecyclerView.Adapter<AdminReviewAdapter.
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         ReviewModel review = reviewList.get(position);
-        holder.tvUser.setText(review.getReviewerName());
-        holder.tvTour.setText(review.getTourId()); // Hoặc fetch tour title nếu cần
+        
+        String reviewer = review.getReviewerName();
+        if (reviewer == null || reviewer.trim().isEmpty()) {
+            reviewer = "Người dùng ẩn danh";
+        }
+        holder.tvUser.setText(reviewer);
+
+        String tourTitle = review.getTourTitle();
+        if (tourTitle == null || tourTitle.trim().isEmpty()) {
+            tourTitle = "Mã Tour: " + review.getTourId();
+        }
+        holder.tvTour.setText(tourTitle);
+
         holder.tvComment.setText(review.getContent());
         holder.rbReview.setRating((float) review.getRating());
 

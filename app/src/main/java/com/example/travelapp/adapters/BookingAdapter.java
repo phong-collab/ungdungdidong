@@ -35,8 +35,9 @@ public class BookingAdapter extends RecyclerView.Adapter<BookingAdapter.ViewHold
         holder.txtBookingPrice.setText(String.format("%,d đ", item.getTotalPrice()));
         Glide.with(holder.itemView.getContext()).load(item.getTourThumbnail()).into(holder.imgBookingThum);
 
-        holder.txtStatusBadge.setText(item.getPaymentStatus());
-        if ("PAID".equals(item.getPaymentStatus())) {
+        String status = item.getPaymentStatus();
+        holder.txtStatusBadge.setText(status);
+        if ("PAID".equalsIgnoreCase(status) || "SUCCESS".equalsIgnoreCase(status)) {
             holder.txtStatusBadge.setBackgroundColor(Color.parseColor("#4CAF50"));
             holder.btnReview.setVisibility(View.VISIBLE);
         } else {

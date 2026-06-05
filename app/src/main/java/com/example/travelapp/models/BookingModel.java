@@ -9,6 +9,8 @@ public class BookingModel {
     private String userId;
     private String tourDescription; // ĐÃ THÊM: Khai báo thuộc tính này để hết lỗi gạch đỏ
     private long totalPrice;
+    private long countAdult;
+    private long countChild;
 
     // Constructor trống bắt buộc phải có cho Firebase Firestore
     public BookingModel() {}
@@ -38,4 +40,10 @@ public class BookingModel {
 
     public long getTotalPrice() { return totalPrice; }
     public void setTotalPrice(long totalPrice) { this.totalPrice = totalPrice; }
+
+    public long getCountAdult() { return countAdult; }
+    public void setCountAdult(long countAdult) { this.countAdult = countAdult; }
+
+    public long getCountChild() { return countChild; }
+    public void setCountChild(long countChild) { this.countChild = countChild; }
 }

@@ -164,6 +164,12 @@ public class MyOrdersFragment extends Fragment {
                     .into(holder.imgBookingThum);
 
             if (holder.btnReview != null) {
+                if ("SUCCESS".equalsIgnoreCase(status) || "PAID".equalsIgnoreCase(status)) {
+                    holder.btnReview.setVisibility(View.VISIBLE);
+                } else {
+                    holder.btnReview.setVisibility(View.GONE);
+                }
+
                 // 4. Xử lý sự kiện khi bấm nút "Review" chuẩn
                 holder.btnReview.setOnClickListener(v -> {
                     Intent intent = new Intent(getContext(), com.example.travelapp.activities.ReviewActivity.class);

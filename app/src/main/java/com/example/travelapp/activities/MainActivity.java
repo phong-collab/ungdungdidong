@@ -18,6 +18,7 @@ import java.util.Map;
 import com.example.travelapp.fragments.AdminCategoriesFragment;
 import com.example.travelapp.fragments.AdminReviewsFragment;
 import com.example.travelapp.fragments.AdminToursFragment;
+import com.example.travelapp.fragments.AdminBookingsFragment;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -62,6 +63,8 @@ public class MainActivity extends AppCompatActivity {
                 selectedFragment = new AdminCategoriesFragment();
             } else if (id == R.id.nav_admin_reviews) {
                 selectedFragment = new AdminReviewsFragment();
+            } else if (id == R.id.nav_admin_bookings) {
+                selectedFragment = new AdminBookingsFragment();
             }
 
             if (selectedFragment != null) {

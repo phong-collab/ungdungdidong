@@ -32,11 +32,20 @@ public class HomeFragment extends Fragment {
         rvFeaturedTours = view.findViewById(R.id.rvFeaturedTours);
         txtEmptyHome = view.findViewById(R.id.txtEmptyHome);
         rvFeaturedTours.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvFeaturedTours.setAdapter(new TourAdapter(java.util.Collections.emptyList()));
+
+        if (txtEmptyHome != null) {
+            txtEmptyHome.setText("Dang tai tour...");
+            txtEmptyHome.setVisibility(View.VISIBLE);
+        }
 
         viewModel = new ViewModelProvider(this).get(TourViewModel.class);
         viewModel.getFeaturedToursLiveData().observe(getViewLifecycleOwner(), tours -> {
             boolean hasData = tours != null && !tours.isEmpty();
-            txtEmptyHome.setVisibility(hasData ? View.GONE : View.VISIBLE);
+            if (txtEmptyHome != null) {
+                txtEmptyHome.setText(hasData ? "" : "Chua co tour noi bat");
+                txtEmptyHome.setVisibility(hasData ? View.GONE : View.VISIBLE);
+            }
             rvFeaturedTours.setAdapter(new TourAdapter(tours != null ? tours : java.util.Collections.emptyList()));
         });
     }

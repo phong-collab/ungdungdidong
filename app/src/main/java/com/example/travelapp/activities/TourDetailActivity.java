@@ -1,6 +1,7 @@
 package com.example.travelapp.activities;
 
 import android.content.Intent;
+import android.view.View;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -18,6 +19,12 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.example.travelapp.R;
 import com.example.travelapp.adapters.ItineraryAdapter;
 import com.example.travelapp.models.TourModel;
+import com.example.travelapp.models.ReviewModel;
+import com.example.travelapp.adapters.TourReviewAdapter;
+import com.google.firebase.firestore.DocumentSnapshot;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,6 +37,12 @@ public class TourDetailActivity extends AppCompatActivity {
     private Button btnBookNow;
     private FirebaseFirestore db;
     private String tourId, userId;
+
+    private RecyclerView rvTourReviews;
+    private TextView txtReviewsHeader, txtNoReviews;
+    private Button btnWriteReview;
+    private List<ReviewModel> reviewList;
+    private TourReviewAdapter tourReviewAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +80,24 @@ public class TourDetailActivity extends AppCompatActivity {
         // 4. Cấu hình RecyclerView hiển thị lịch trình tour
         rvItinerary.setLayoutManager(new LinearLayoutManager(this));
 
+        // Khởi tạo các thành phần giao diện đánh giá
+        rvTourReviews = findViewById(R.id.rvTourReviews);
+        txtReviewsHeader = findViewById(R.id.txtReviewsHeader);
+        txtNoReviews = findViewById(R.id.txtNoReviews);
+        btnWriteReview = findViewById(R.id.btnWriteReview);
+
+        rvTourReviews.setLayoutManager(new LinearLayoutManager(this));
+        reviewList = new ArrayList<>();
+        tourReviewAdapter = new TourReviewAdapter(reviewList);
+        rvTourReviews.setAdapter(tourReviewAdapter);
+
+        btnWriteReview.setOnClickListener(v -> {
+            Intent intent = new Intent(TourDetailActivity.this, ReviewActivity.class);
+            intent.putExtra("TOUR_ID", tourId);
+            intent.putExtra("tourTitle", txtDetailTitle.getText().toString());
+            startActivity(intent);
+        });
+
         // 5. Cài đặt các sự kiện click nút điều hướng cơ bản
         btnBack.setOnClickListener(v -> finish());
         btnFavorite.setOnClickListener(v -> toggleFavorite(btnFavorite.isChecked()));
@@ -74,6 +105,8 @@ public class TourDetailActivity extends AppCompatActivity {
         // 6. Chạy các hàm tải dữ liệu
         loadTourDetailsFromFirestore();
         checkIfFavoriteExists();
+        checkUserPaymentStatus();
+        loadTourReviews();
     }
 
     // Hàm duy nhất làm nhiệm vụ kéo toàn bộ thông tin Chi tiết Tour + Lịch trình + Cấu hình nút Đặt vé
@@ -152,5 +185,75 @@ public class TourDetailActivity extends AppCompatActivity {
             db.collection("favorites").document(favId).delete()
                     .addOnSuccessListener(aVoid -> Toast.makeText(TourDetailActivity.this, "Đã bỏ yêu thích!", Toast.LENGTH_SHORT).show());
         }
+    }
+
+    private void checkUserPaymentStatus() {
+        if (userId == null || tourId == null) {
+            btnWriteReview.setVisibility(View.GONE);
+            return;
+        }
+        db.collection("bookings")
+                .whereEqualTo("tourId", tourId)
+                .whereEqualTo("userId", userId)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    boolean hasPaid = false;
+                    for (DocumentSnapshot doc : queryDocumentSnapshots) {
+                        String status = doc.getString("paymentStatus");
+                        if ("PAID".equalsIgnoreCase(status) || "SUCCESS".equalsIgnoreCase(status)) {
+                            hasPaid = true;
+                            break;
+                        }
+                    }
+                    if (hasPaid) {
+                        btnWriteReview.setVisibility(View.VISIBLE);
+                    } else {
+                        btnWriteReview.setVisibility(View.GONE);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    btnWriteReview.setVisibility(View.GONE);
+                });
+    }
+
+    private void loadTourReviews() {
+        if (tourId == null) return;
+        db.collection("reviews")
+                .whereEqualTo("tourId", tourId)
+                .addSnapshotListener((value, error) -> {
+                    if (error != null) return;
+                    if (value != null) {
+                        reviewList.clear();
+                        for (DocumentSnapshot doc : value.getDocuments()) {
+                            ReviewModel review = doc.toObject(ReviewModel.class);
+                            if (review != null) {
+                                review.setId(doc.getId());
+                                reviewList.add(review);
+                            }
+                        }
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                            reviewList.sort((r1, r2) -> {
+                                if (r1.getCreatedAt() == null && r2.getCreatedAt() == null) return 0;
+                                if (r1.getCreatedAt() == null) return 1;
+                                if (r2.getCreatedAt() == null) return -1;
+                                return r2.getCreatedAt().compareTo(r1.getCreatedAt());
+                            });
+                        }
+                        tourReviewAdapter.notifyDataSetChanged();
+
+                        if (reviewList.isEmpty()) {
+                            txtNoReviews.setVisibility(View.VISIBLE);
+                            txtReviewsHeader.setText("Đánh giá (0.0 / 5 ★) - 0 đánh giá");
+                        } else {
+                            txtNoReviews.setVisibility(View.GONE);
+                            double sum = 0;
+                            for (ReviewModel r : reviewList) {
+                                sum += r.getRating();
+                            }
+                            double avg = sum / reviewList.size();
+                            txtReviewsHeader.setText(String.format(Locale.getDefault(), "Đánh giá (%.1f / 5 ★) - %d đánh giá", avg, reviewList.size()));
+                        }
+                    }
+                });
     }
 }

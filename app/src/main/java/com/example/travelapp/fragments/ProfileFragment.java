@@ -67,10 +67,12 @@ public class ProfileFragment extends Fragment {
             redirectToLogin();
         });
 
-        // 3. Xử lý sự kiện bấm vào nút Admin (Dẫn thẳng qua trang Thêm Tour mới)
+        // 3. Xử lý sự kiện bấm vào nút Admin (Dẫn thẳng qua trang Thống Kê & Báo Cáo Doanh Thu)
         btnAdminDashboard.setOnClickListener(v -> {
-            Intent intent = new Intent(getContext(), AddTourActivity.class);
-            startActivity(intent);
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new AdminDashboardFragment())
+                    .addToBackStack(null)
+                    .commit();
         });
 
         // 4. ĐÃ THÊM: Xử lý sự kiện chuyển sang trang sửa Profile khi click nút
@@ -106,6 +108,7 @@ public class ProfileFragment extends Fragment {
                         // KIỂM TRA PHÂN QUYỀN ADMIN (Giai đoạn 7)
                         // Nếu trường role trên Firestore có chữ "admin", nút ẩn sẽ hiện lên
                         if ("admin".equals(role)) {
+                            btnAdminDashboard.setText("BÁO CÁO & THỐNG KÊ DOANH THU");
                             btnAdminDashboard.setVisibility(View.VISIBLE);
                         } else {
                             btnAdminDashboard.setVisibility(View.GONE);

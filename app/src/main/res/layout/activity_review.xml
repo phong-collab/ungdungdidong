@@ -5,40 +5,81 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
+    android:padding="20dp"
+    android:background="#F8F9FA"
     tools:context=".activities.ReviewActivity">
 
-    <RatingBar
-        android:id="@+id/ratingBar"
-        style="?android:attr/ratingBarStyleSmall"
+    <TextView
+        android:id="@+id/tvReviewTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:numStars="5"
-        android:stepSize="1.0"
+        android:text="Đánh Giá Chuyến Đi"
+        android:textColor="@color/black"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <EditText
-        android:id="@+id/edtReviewContent"
+    <TextView
+        android:id="@+id/tvReviewSubtitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Vui lòng chọn số sao và chia sẻ cảm nghĩ của bạn về chuyến đi này để giúp cộng đồng nhé!"
+        android:textColor="#666666"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/tvReviewTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <RatingBar
+        android:id="@+id/ratingBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:numStars="5"
+        android:stepSize="1.0"
+        android:rating="5.0"
+        android:isIndicator="false"
+        android:layout_marginTop="24dp"
+        app:layout_constraintTop_toBottomOf="@id/tvReviewSubtitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilReviewContent"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
-        android:hint="Write your review..."
-        android:inputType="textMultiLine"
-        android:minLines="4"
-        android:gravity="top|start"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="24dp"
+        android:hint="Viết nhận xét của bạn..."
+        app:boxStrokeColor="@color/design_default_color_primary"
         app:layout_constraintTop_toBottomOf="@id/ratingBar"
         app:layout_constraintBottom_toTopOf="@id/btnSubmitReview"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edtReviewContent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="top|start"
+            android:inputType="textMultiLine"
+            android:minLines="6" />
+    </com.google.android.material.textfield.TextInputLayout>
 
     <Button
         android:id="@+id/btnSubmitReview"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Submit Review"
-        android:layout_marginTop="16dp"
+        android:layout_height="52dp"
+        android:text="Gửi Đánh Giá"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textAllCaps="false"
+        app:cornerRadius="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

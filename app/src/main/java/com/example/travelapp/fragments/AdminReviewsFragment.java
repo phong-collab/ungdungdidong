@@ -20,7 +20,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AdminReviewsFragment extends Fragment {
 
@@ -69,8 +71,34 @@ public class AdminReviewsFragment extends Fragment {
     }
 
     private void deleteReview(ReviewModel review) {
+        String tourId = review.getTourId();
         db.collection("reviews").document(review.getId())
                 .delete()
-                .addOnSuccessListener(aVoid -> Toast.makeText(getContext(), "Review deleted", Toast.LENGTH_SHORT).show());
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(getContext(), "Review deleted", Toast.LENGTH_SHORT).show();
+                    if (tourId != null && !tourId.isEmpty()) {
+                        recalculateRatingAverageForTour(tourId);
+                    }
+                });
+    }
+
+    private void recalculateRatingAverageForTour(String tourId) {
+        db.collection("reviews").whereEqualTo("tourId", tourId).get().addOnSuccessListener(queryDocumentSnapshots -> {
+            int total = queryDocumentSnapshots.size();
+            double sum = 0;
+            for (DocumentSnapshot doc : queryDocumentSnapshots) {
+                Double ratingVal = doc.getDouble("rating");
+                if (ratingVal != null) {
+                    sum += ratingVal;
+                }
+            }
+            double avg = total > 0 ? (sum / total) : 0;
+
+            Map<String, Object> updateData = new HashMap<>();
+            updateData.put("ratingAverage", avg);
+            updateData.put("totalReviews", total);
+
+            db.collection("tours").document(tourId).update(updateData);
+        });
     }
 }
