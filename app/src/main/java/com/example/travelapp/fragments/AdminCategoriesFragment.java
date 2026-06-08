@@ -93,6 +93,40 @@ public class AdminCategoriesFragment extends Fragment {
     }
 
     private void showAddCategoryDialog() {
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_add_category, null);
+        AlertDialog dialog = new AlertDialog.Builder(getContext())
+                .setView(dialogView)
+                .create();
+
+        TextInputEditText edtName = dialogView.findViewById(R.id.edtCategoryName);
+        imgPreview = dialogView.findViewById(R.id.imgCategoryPreview);
+        MaterialButton btnSave = dialogView.findViewById(R.id.btnSave);
+        MaterialButton btnCancel = dialogView.findViewById(R.id.btnCancel);
+
+        selectedImageUri = null;
+
+        imgPreview.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_PICK);
+            intent.setType("image/*");
+            imagePickerLauncher.launch(intent);
+        });
+
+        btnSave.setOnClickListener(v -> {
+            String name = edtName.getText().toString().trim();
+            if (name.isEmpty()) {
+                Toast.makeText(getContext(), "Vui lòng nhập tên danh mục", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (selectedImageUri != null) {
+                uploadImageToCloudinary(name, dialog);
+            } else {
+                Toast.makeText(getContext(), "Vui lòng chọn hình ảnh cho danh mục", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
     }
 
     private void loadCategories() {
@@ -124,6 +158,8 @@ public class AdminCategoriesFragment extends Fragment {
         imgPreview = dialogView.findViewById(R.id.imgCategoryPreview);
         MaterialButton btnSave = dialogView.findViewById(R.id.btnSave);
         MaterialButton btnCancel = dialogView.findViewById(R.id.btnCancel);
+
+        selectedImageUri = null;
 
         edtName.setText(category.getName());
         Glide.with(this).load(category.getImage()).into(imgPreview);

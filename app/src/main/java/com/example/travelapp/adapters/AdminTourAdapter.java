@@ -42,7 +42,7 @@ public class AdminTourAdapter extends RecyclerView.Adapter<AdminTourAdapter.View
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         TourModel tour = tourList.get(position);
         holder.tvTitle.setText(tour.getTitle());
-        holder.tvPrice.setText(String.format("$%d", tour.getPriceAdult()));
+        holder.tvPrice.setText(String.format("%,d đ", tour.getPriceAdult()));
         
         Glide.with(holder.itemView.getContext())
                 .load(tour.getThumbnail())
