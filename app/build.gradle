@@ -59,5 +59,7 @@ dependencies {
     implementation 'com.cloudinary:cloudinary-android:2.5.0'
 
     // ZaloPay SDK (Bỏ comment khi đã thêm file vào libs)
-    // implementation files('libs/zpdk-release-v2.aar')
+    implementation("com.squareup.okhttp3:okhttp:4.6.0")
+    implementation("commons-codec:commons-codec:1.14")
+    implementation files('libs/zpdk-release-v3.1.aar')
 }

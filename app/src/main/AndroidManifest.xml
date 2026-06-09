@@ -14,52 +14,65 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.TravelApp"
-
         android:usesCleartextTraffic="true"
         tools:targetApi="m">
-
+        <activity
+            android:name=".activities.NotificationPayment"
+            android:exported="false" />
         <activity
             android:name=".activities.AddTourActivity"
             android:exported="false" />
-
         <activity
             android:name=".activities.ReviewActivity"
             android:exported="false" />
-
         <activity
             android:name=".activities.TourDetailActivity"
             android:exported="false" />
-
         <activity
             android:name=".activities.LoginActivity"
             android:exported="false" />
-
         <activity
             android:name=".activities.RegisterActivity"
             android:exported="false" />
-
         <activity
             android:name=".activities.OrderDetailActivity"
-            android:exported="false" />
+            android:exported="true"
+            android:label="Merchant Demo"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
 
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="app"
+                    android:scheme="demozpdk" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".activities.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".activities.BookingActivity" android:exported="true">
+        <activity
+            android:name=".activities.BookingActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="travelapp" android:host="payment" />
+
+                <data
+                    android:host="payment"
+                    android:scheme="travelapp" />
             </intent-filter>
         </activity>
-
     </application>
 
 </manifest>
