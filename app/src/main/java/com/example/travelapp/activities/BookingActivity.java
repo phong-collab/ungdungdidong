@@ -4,14 +4,11 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.StrictMode;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.example.travelapp.Api.CreateOrder;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.example.travelapp.R;
@@ -25,11 +22,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-
-import vn.zalopay.sdk.Environment;
-import vn.zalopay.sdk.ZaloPayError;
-import vn.zalopay.sdk.ZaloPaySDK;
-import vn.zalopay.sdk.listeners.PayOrderListener;
 
 public class BookingActivity extends AppCompatActivity {
     private TextView txtBookingTourTitle, txtPriceAdultLabel, txtPriceChildLabel, txtCountAdult, txtCountChild, txtBookingTotalPrice;
@@ -47,13 +39,6 @@ public class BookingActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_booking);
-
-        StrictMode.ThreadPolicy policy = new
-        StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);
-
-        // ZaloPay SDK Init
-        ZaloPaySDK.init(553, Environment.SANDBOX);
 
         db = FirebaseFirestore.getInstance();
 
@@ -175,49 +160,11 @@ public class BookingActivity extends AppCompatActivity {
         db.collection("bookings").document(currentBookingDocId).set(booking)
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(this, "Đang khởi tạo liên kết ZaloPay...", Toast.LENGTH_SHORT).show();
-//                    new RequestZaloPayTokenTask().execute(appTransId, String.valueOf(totalAmount));
+                    new RequestZaloPayTokenTask().execute(appTransId, String.valueOf(totalAmount));
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "Tạo đơn hàng thất bại: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
-        CreateOrder orderApi = new CreateOrder();
-        String totalString = String.format("%.0f", totalAmount);
-        try {
-            JSONObject data = orderApi.createOrder(totalString);
-            String code = data.getString("return_code");
-            if (code.equals("1")) {
-                String token = data.getString("zp_trans_token");
-                ZaloPaySDK.getInstance().payOrder(BookingActivity.this, token, "demozpdk://app", new PayOrderListener() {
-                    @Override
-                    public void onPaymentSucceeded(String s, String s1, String s2) {
-                        db.collection("bookings").document(tourId)
-                                .update("paymentStatus", "SUCCESS")
-                                .addOnSuccessListener(aVoid -> {
-                                    Intent intent = new Intent(BookingActivity.this, NotificationPayment.class);
-                                    intent.putExtra("result", "Successfully");
-                                    startActivity(intent);
-                                });
-                    }
-
-                    @Override
-                    public void onPaymentCanceled(String s, String s1) {
-                        Intent intent = new Intent(BookingActivity.this, NotificationPayment.class);
-                        intent.putExtra("result", "Canceled this payment");
-                        startActivity(intent);
-                    }
-
-                    @Override
-                    public void onPaymentError(ZaloPayError zaloPayError, String s, String s1) {
-                        Intent intent = new Intent(BookingActivity.this, NotificationPayment.class);
-                        intent.putExtra("result", "Something went wrong when paying. Please try again!");
-                        startActivity(intent);
-                    }
-                });
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     // Hàm cập nhật trạng thái đơn hàng thành công sau khi nhận tín hiệu phản hồi từ ZaloPay
@@ -241,88 +188,95 @@ public class BookingActivity extends AppCompatActivity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        ZaloPaySDK.getInstance().onResult(intent);
+        setIntent(intent); // Cập nhật intent mới chứa liên kết gọi về
     }
 
-//    @Override
-//    protected void onResume() {
-//        super.onResume();
-//        Intent intent = getIntent();
-//        Uri data = intent.getData();
-//
-//        // Kiểm tra xem ứng dụng được gọi ngược lại bằng Deep Link từ ZaloPay thành công không
-//        if (data != null && "travelapp".equals(data.getScheme()) && "payment".equals(data.getHost())) {
-//            if (!currentBookingDocId.isEmpty()) {
-//                updatePaymentStatusToSuccess(currentBookingDocId);
-//                currentBookingDocId = ""; // Giải phóng dữ liệu phiên
-//            }
-//            intent.setData(null); // Clear liên kết để tránh lặp hàm khi xoay màn hình
-//        }
-//    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Intent intent = getIntent();
+        Uri data = intent.getData();
+
+        // Kiểm tra xem ứng dụng được gọi ngược lại bằng Deep Link từ ZaloPay thành công không
+        if (data != null && "travelapp".equals(data.getScheme()) && "payment".equals(data.getHost())) {
+            if (!currentBookingDocId.isEmpty()) {
+                updatePaymentStatusToSuccess(currentBookingDocId);
+                currentBookingDocId = ""; // Giải phóng dữ liệu phiên
+            }
+            intent.setData(null); // Clear liên kết để tránh lặp hàm khi xoay màn hình
+        }
+    }
 
     // --- TIẾN TRÌNH TRUY VẤN MẠNG GỌI CỔNG THANH TOÁN ZALOPAY ---
-//    private class RequestZaloPayTokenTask extends AsyncTask<String, Void, String> {
-//        @Override
-//        protected String doInBackground(String... params) {
-//            String appTransId = params[0];
-//            String amount = params[1];
-//
-//            // Sử dụng thời gian thực để tránh lỗi hết hạn mã giao dịch từ hệ thống cổng
-//            String appTime = String.valueOf(System.currentTimeMillis());
-//            String redirectUrl = Uri.encode("travelapp://payment");
-//
-//            try {
-//                URL url = new URL("https://sb-openapi.zalopay.vn/v2/createorder");
-//                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-//                conn.setRequestMethod("POST");
-//                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-//                conn.setDoOutput(true);
-//
-//                // Cấu trúc chuỗi MAC chuẩn Sandbox: app_id|app_trans_id|app_user|amount|app_time|embed_data|item
-//                String data = "2553|" + appTransId + "|Đồ Án Đặt Tour|" + amount + "|" + appTime + "|[]|[]";
-//                String mac = Helper.hmacSHA256(data, "9phuAOYhan4Ju9crw3A2u849vN6w68uZ");
-//
-//                String urlParameters = "app_id=2553"
-//                        + "&app_trans_id=" + appTransId
-//                        + "&app_user=" + Uri.encode("Đồ Án Đặt Tour")
-//                        + "&amount=" + amount
-//                        + "&app_time=" + appTime
-//                        + "&embed_data=" + Uri.encode("[]")
-//                        + "&item=" + Uri.encode("[]")
-//                        + "&description=" + Uri.encode("Thanh toan do an dat tour")
-//                        + "&redirect_url=" + redirectUrl
-//                        + "&mac=" + mac;
-//
-//                DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
-//                wr.writeBytes(urlParameters);
-//                wr.flush();
-//                wr.close();
-//
-//                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-//                String inputLine;
-//                StringBuilder response = new StringBuilder();
-//                while ((inputLine = in.readLine()) != null) response.append(inputLine);
-//                in.close();
-//
-//                JSONObject jsonObject = new JSONObject(response.toString());
-//                if (jsonObject.has("return_code") && jsonObject.getInt("return_code") == 1) {
-//                    return jsonObject.getString("order_url");
-//                }
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//            return null;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(String orderUrl) {
-//            if (orderUrl != null && !orderUrl.isEmpty()) {
-//                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(orderUrl));
-//                startActivity(intent);
-//                finish();
-//            } else {
-//                Toast.makeText(BookingActivity.this, "Không thể lấy cổng liên kết thanh toán ZaloPay! Vui lòng thử lại.", Toast.LENGTH_LONG).show();
-//            }
-//        }
-//    }
+    private class RequestZaloPayTokenTask extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... params) {
+            String appTransId = params[0];
+            String amount = params[1];
+
+            // Sử dụng thời gian thực để tránh lỗi hết hạn mã giao dịch từ hệ thống cổng
+            String appTime = String.valueOf(System.currentTimeMillis());
+            String redirectUrl = "travelapp://payment";
+
+            try {
+                URL url = new URL("https://sb-openapi.zalopay.vn/v2/create");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                conn.setDoOutput(true);
+
+                // Cấu hình thông tin ứng dụng đồng nhất với AppInfo
+                String appId = String.valueOf(com.example.travelapp.Constant.AppInfo.APP_ID);
+                String macKey = com.example.travelapp.Constant.AppInfo.MAC_KEY;
+                String appUser = "Đồ Án Đặt Tour";
+
+                // Đưa redirecturl vào embeddata theo đúng chuẩn ZaloPay v2
+                String embedData = "{\"redirecturl\":\"" + redirectUrl + "\"}";
+                String item = "[]";
+
+                // Cấu trúc chuỗi MAC chuẩn v2: app_id|app_trans_id|app_user|amount|app_time|embed_data|item
+                String data = appId + "|" + appTransId + "|" + appUser + "|" + amount + "|" + appTime + "|" + embedData + "|" + item;
+                String mac = Helper.hmacSHA256(data, macKey);
+
+                String urlParameters = "app_id=" + appId
+                        + "&app_trans_id=" + appTransId
+                        + "&app_user=" + Uri.encode(appUser)
+                        + "&amount=" + amount
+                        + "&app_time=" + appTime
+                        + "&embed_data=" + Uri.encode(embedData)
+                        + "&item=" + Uri.encode(item)
+                        + "&description=" + Uri.encode("Thanh toan do an dat tour")
+                        + "&mac=" + mac;
+
+                DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
+                wr.writeBytes(urlParameters);
+                wr.flush();
+                wr.close();
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) response.append(inputLine);
+                in.close();
+
+                JSONObject jsonObject = new JSONObject(response.toString());
+                if (jsonObject.has("return_code") && jsonObject.getInt("return_code") == 1) {
+                    return jsonObject.getString("order_url");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String orderUrl) {
+            if (orderUrl != null && !orderUrl.isEmpty()) {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(orderUrl));
+                startActivity(intent);
+            } else {
+                Toast.makeText(BookingActivity.this, "Không thể lấy cổng liên kết thanh toán ZaloPay! Vui lòng thử lại.", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
 }
