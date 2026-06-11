@@ -100,6 +100,15 @@
                     android:layout_marginTop="2dp" />
 
                 <TextView
+                    android:id="@+id/tvAdminBookingDate"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Ngày đi: chưa chọn"
+                    android:textColor="#555555"
+                    android:textSize="12sp"
+                    android:layout_marginTop="2dp" />
+
+                <TextView
                     android:id="@+id/tvAdminBookingPrice"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

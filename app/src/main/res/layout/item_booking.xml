@@ -47,6 +47,15 @@
                 android:text="Price"
                 android:textColor="@android:color/holo_red_dark"
                 android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/txtBookingDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Ngày đi: chưa chọn"
+                android:textColor="#777777"
+                android:textSize="13sp" />
         </LinearLayout>
 
         <LinearLayout

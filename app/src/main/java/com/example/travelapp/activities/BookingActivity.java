@@ -25,7 +25,8 @@ import java.util.Map;
 
 public class BookingActivity extends AppCompatActivity {
     private TextView txtBookingTourTitle, txtPriceAdultLabel, txtPriceChildLabel, txtCountAdult, txtCountChild, txtBookingTotalPrice;
-    private Button btnMinusAdult, btnPlusAdult, btnMinusChild, btnPlusChild, btnPayZaloPay;
+    private TextView txtDepartureDate; // ĐÃ THÊM: hiển thị ngày khởi hành đã chọn
+    private Button btnMinusAdult, btnPlusAdult, btnMinusChild, btnPlusChild, btnPayZaloPay, btnSelectDate; // ĐÃ THÊM: btnSelectDate
     private ImageButton btnBackBooking;
     private FirebaseFirestore db;
     private String tourId, userId, tourTitle, tourThumbnail;
@@ -34,6 +35,7 @@ public class BookingActivity extends AppCompatActivity {
 
     // Biến toàn cục để lưu lại mã tài liệu hóa đơn hiện tại trong phiên thanh toán
     private String currentBookingDocId = "";
+    private String selectedDepartureDate = ""; // ĐÃ THÊM: lưu ngày khởi hành được chọn
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,15 +70,17 @@ public class BookingActivity extends AppCompatActivity {
         txtCountAdult = findViewById(R.id.txtCountAdult);
         txtCountChild = findViewById(R.id.txtCountChild);
         txtBookingTotalPrice = findViewById(R.id.txtBookingTotalPrice);
+        txtDepartureDate = findViewById(R.id.txtDepartureDate); // ĐÃ THÊM
         btnMinusAdult = findViewById(R.id.btnMinusAdult);
         btnPlusAdult = findViewById(R.id.btnPlusAdult);
         btnMinusChild = findViewById(R.id.btnMinusChild);
         btnPlusChild = findViewById(R.id.btnPlusChild);
         btnPayZaloPay = findViewById(R.id.btnPayZaloPay);
+        btnSelectDate = findViewById(R.id.btnSelectDate); // ĐÃ THÊM
         btnBackBooking = findViewById(R.id.btnBackBooking);
 
         if (btnBackBooking == null || btnPayZaloPay == null || btnPlusAdult == null || btnMinusAdult == null
-                || btnPlusChild == null || btnMinusChild == null) {
+                || btnPlusChild == null || btnMinusChild == null || btnSelectDate == null || txtDepartureDate == null) {
             Toast.makeText(this, "Loi giao dien: thieu nut trong layout dat tour!", Toast.LENGTH_SHORT).show();
             finish();
             return;
@@ -92,6 +96,7 @@ public class BookingActivity extends AppCompatActivity {
         btnMinusAdult.setOnClickListener(v -> { if (countAdult > 1) { countAdult--; updatePriceUI(); } });
         btnPlusChild.setOnClickListener(v -> { countChild++; updatePriceUI(); });
         btnMinusChild.setOnClickListener(v -> { if (countChild > 0) { countChild--; updatePriceUI(); } });
+        btnSelectDate.setOnClickListener(v -> showDatePickerDialog()); // ĐÃ THÊM
 
         btnPayZaloPay.setOnClickListener(v -> {
             if (userId.isEmpty()) {
@@ -138,7 +143,30 @@ public class BookingActivity extends AppCompatActivity {
         txtBookingTotalPrice.setText(String.format("%,d đ", totalAmount));
     }
 
+    private void showDatePickerDialog() {
+        final java.util.Calendar calendar = java.util.Calendar.getInstance();
+        int year = calendar.get(java.util.Calendar.YEAR);
+        int month = calendar.get(java.util.Calendar.MONTH);
+        int day = calendar.get(java.util.Calendar.DAY_OF_MONTH);
+
+        android.app.DatePickerDialog datePickerDialog = new android.app.DatePickerDialog(this,
+                (view, selectedYear, selectedMonth, selectedDay) -> {
+                    selectedDepartureDate = String.format(java.util.Locale.getDefault(), "%02d-%02d-%d", selectedDay, selectedMonth + 1, selectedYear);
+                    txtDepartureDate.setText(selectedDepartureDate);
+                    txtDepartureDate.setTextColor(android.graphics.Color.BLACK);
+                    txtDepartureDate.setTypeface(null, android.graphics.Typeface.NORMAL);
+                }, year, month, day);
+
+        datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
+        datePickerDialog.show();
+    }
+
     private void startBookingWorkflow() {
+        if (selectedDepartureDate.isEmpty()) {
+            Toast.makeText(this, "Vui lòng chọn ngày khởi hành trước khi thanh toán!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         String appTransId = Helper.getAppTransId();
         currentBookingDocId = "book_" + appTransId; // Lưu mã hóa đơn để chuẩn bị cập nhật sau thanh toán
 
@@ -150,6 +178,7 @@ public class BookingActivity extends AppCompatActivity {
         booking.put("tourThumbnail", tourThumbnail);
         booking.put("totalPrice", totalAmount);
         booking.put("paymentStatus", "PENDING");
+        booking.put("departureDate", selectedDepartureDate); // ĐÃ THÊM
 
         // Lưu số lượng người lớn và trẻ em thực tế lên Firestore
         booking.put("countAdult", (long) countAdult);

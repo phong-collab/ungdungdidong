@@ -44,6 +44,14 @@ public class AdminBookingAdapter extends RecyclerView.Adapter<AdminBookingAdapte
         holder.tvBookingTitle.setText(booking.getTourTitle());
         holder.tvBookingUser.setText("Mã KH: " + booking.getUserId());
         holder.tvBookingPassengers.setText("Người lớn: " + booking.getCountAdult() + " - Trẻ em: " + booking.getCountChild());
+        
+        String depDate = booking.getDepartureDate();
+        if (depDate == null || depDate.isEmpty()) {
+            holder.tvBookingDate.setText("Ngày đi: chưa chọn");
+        } else {
+            holder.tvBookingDate.setText("Ngày đi: " + depDate);
+        }
+        
         holder.tvBookingPrice.setText(String.format("%,d đ", booking.getTotalPrice()));
 
         Glide.with(holder.itemView.getContext())
@@ -76,10 +84,10 @@ public class AdminBookingAdapter extends RecyclerView.Adapter<AdminBookingAdapte
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvBookingId, tvStatusBadge, tvBookingTitle, tvBookingUser, tvBookingPassengers, tvBookingPrice;
+        TextView tvBookingId, tvStatusBadge, tvBookingTitle, tvBookingUser, tvBookingPassengers, tvBookingPrice, tvBookingDate;
         ImageView imgBookingThum;
         Button btnConfirm, btnCancel;
-
+ 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvBookingId = itemView.findViewById(R.id.tvAdminBookingId);
@@ -88,6 +96,7 @@ public class AdminBookingAdapter extends RecyclerView.Adapter<AdminBookingAdapte
             tvBookingUser = itemView.findViewById(R.id.tvAdminBookingUser);
             tvBookingPassengers = itemView.findViewById(R.id.tvAdminBookingPassengers);
             tvBookingPrice = itemView.findViewById(R.id.tvAdminBookingPrice);
+            tvBookingDate = itemView.findViewById(R.id.tvAdminBookingDate); // ĐÃ THÊM
             imgBookingThum = itemView.findViewById(R.id.imgAdminBookingThum);
             btnConfirm = itemView.findViewById(R.id.btnAdminBookingConfirm);
             btnCancel = itemView.findViewById(R.id.btnAdminBookingCancel);

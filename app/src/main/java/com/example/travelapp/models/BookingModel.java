@@ -8,6 +8,7 @@ public class BookingModel {
     private String paymentStatus;
     private String userId;
     private String tourDescription; // ĐÃ THÊM: Khai báo thuộc tính này để hết lỗi gạch đỏ
+    private String departureDate; // ĐÃ THÊM: Ngày khởi hành của tour
     private long totalPrice;
     private long countAdult;
     private long countChild;
@@ -37,6 +38,9 @@ public class BookingModel {
 
     public String getTourDescription() { return tourDescription; }
     public void setTourDescription(String tourDescription) { this.tourDescription = tourDescription; }
+
+    public String getDepartureDate() { return departureDate; }
+    public void setDepartureDate(String departureDate) { this.departureDate = departureDate; }
 
     public long getTotalPrice() { return totalPrice; }
     public void setTotalPrice(long totalPrice) { this.totalPrice = totalPrice; }

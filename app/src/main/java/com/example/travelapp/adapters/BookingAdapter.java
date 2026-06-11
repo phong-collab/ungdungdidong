@@ -33,6 +33,14 @@ public class BookingAdapter extends RecyclerView.Adapter<BookingAdapter.ViewHold
         BookingModel item = list.get(position);
         holder.txtBookingTitle.setText(item.getTourTitle());
         holder.txtBookingPrice.setText(String.format("%,d đ", item.getTotalPrice()));
+        
+        String depDate = item.getDepartureDate();
+        if (depDate == null || depDate.isEmpty()) {
+            holder.txtBookingDate.setText("Ngày đi: chưa chọn");
+        } else {
+            holder.txtBookingDate.setText("Ngày đi: " + depDate);
+        }
+        
         Glide.with(holder.itemView.getContext()).load(item.getTourThumbnail()).into(holder.imgBookingThum);
 
         String status = item.getPaymentStatus();
@@ -56,12 +64,13 @@ public class BookingAdapter extends RecyclerView.Adapter<BookingAdapter.ViewHold
     public int getItemCount() { return list != null ? list.size() : 0; }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        ImageView imgBookingThum; TextView txtBookingTitle, txtBookingPrice, txtStatusBadge; Button btnReview;
+        ImageView imgBookingThum; TextView txtBookingTitle, txtBookingPrice, txtStatusBadge, txtBookingDate; Button btnReview;
         ViewHolder(View itemView) {
             super(itemView);
             imgBookingThum = itemView.findViewById(R.id.imgBookingThum);
             txtBookingTitle = itemView.findViewById(R.id.txtBookingTitle);
             txtBookingPrice = itemView.findViewById(R.id.txtBookingPrice);
+            txtBookingDate = itemView.findViewById(R.id.txtBookingDate); // ĐÃ THÊM
             txtStatusBadge = itemView.findViewById(R.id.txtStatusBadge);
             btnReview = itemView.findViewById(R.id.btnReview);
         }

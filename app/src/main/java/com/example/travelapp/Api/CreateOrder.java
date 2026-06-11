@@ -1,6 +1,5 @@
 package com.example.travelapp.Api;
 
-
 import com.example.travelapp.Constant.AppInfo;
 import com.example.travelapp.Helper.Helpers;
 
@@ -48,7 +47,7 @@ public class CreateOrder {
         }
     }
 
-     public JSONObject createOrder(String amount) throws Exception {
+    public JSONObject createOrder(String amount) throws Exception {
         CreateOrderData input = new CreateOrderData(amount);
 
         RequestBody formBody = new FormBody.Builder()
@@ -68,4 +67,3 @@ public class CreateOrder {
         return data;
     }
 }
-
