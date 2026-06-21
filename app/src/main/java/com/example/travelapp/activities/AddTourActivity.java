@@ -7,7 +7,10 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -43,6 +46,8 @@ public class AddTourActivity extends AppCompatActivity {
     private MaterialCardView cardSelectImage;
     private MaterialButton btnSave;
     private MaterialToolbar toolbar;
+    private LinearLayout layoutItineraryContainer;
+    private MaterialButton btnAddItineraryDay;
 
     private FirebaseFirestore db;
     private String tourId = null;
@@ -85,6 +90,7 @@ public class AddTourActivity extends AppCompatActivity {
 
         btnSave.setOnClickListener(v -> validateAndSave());
         toolbar.setNavigationOnClickListener(v -> finish());
+        btnAddItineraryDay.setOnClickListener(v -> addItineraryDayView(null));
     }
 
     private void initViews() {
@@ -98,6 +104,8 @@ public class AddTourActivity extends AppCompatActivity {
         cardSelectImage = findViewById(R.id.cardSelectImage);
         btnSave = findViewById(R.id.btnSaveTour);
         toolbar = findViewById(R.id.toolbarAddTour);
+        layoutItineraryContainer = findViewById(R.id.layoutItineraryContainer);
+        btnAddItineraryDay = findViewById(R.id.btnAddItineraryDay);
 
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
@@ -145,6 +153,12 @@ public class AddTourActivity extends AppCompatActivity {
                         spinnerCategory.setText(catDoc.getString("name"), false);
                     }
                 });
+
+                if (tour.getItinerary() != null) {
+                    for (TourModel.ItineraryInner item : tour.getItinerary()) {
+                        addItineraryDayView(item);
+                    }
+                }
             }
         });
     }
@@ -158,6 +172,19 @@ public class AddTourActivity extends AppCompatActivity {
         if (title.isEmpty() || priceStr.isEmpty() || selectedCategoryId.isEmpty()) {
             Toast.makeText(this, "Please fill required fields", Toast.LENGTH_SHORT).show();
             return;
+        }
+
+        // Validate itinerary
+        for (int i = 0; i < layoutItineraryContainer.getChildCount(); i++) {
+            View view = layoutItineraryContainer.getChildAt(i);
+            TextInputEditText edtContent = view.findViewById(R.id.edtItineraryContent);
+            if (edtContent != null) {
+                String content = edtContent.getText().toString().trim();
+                if (content.isEmpty()) {
+                    Toast.makeText(this, "Vui lòng nhập nội dung cho Ngày " + (i + 1), Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            }
         }
 
         if (selectedImageUri != null) {
@@ -200,10 +227,55 @@ public class AddTourActivity extends AppCompatActivity {
         tour.put("categoryId", selectedCategoryId);
         tour.put("isFeatured", switchFeatured.isChecked());
 
+        // Extract itinerary list
+        List<Map<String, Object>> itineraryList = new ArrayList<>();
+        for (int i = 0; i < layoutItineraryContainer.getChildCount(); i++) {
+            View view = layoutItineraryContainer.getChildAt(i);
+            TextInputEditText edtContent = view.findViewById(R.id.edtItineraryContent);
+            if (edtContent != null) {
+                String content = edtContent.getText().toString().trim();
+                Map<String, Object> item = new HashMap<>();
+                item.put("day", i + 1);
+                item.put("content", content);
+                itineraryList.add(item);
+            }
+        }
+        tour.put("itinerary", itineraryList);
+
         if (tourId == null) {
             db.collection("tours").add(tour).addOnSuccessListener(ref -> finish());
         } else {
             db.collection("tours").document(tourId).update(tour).addOnSuccessListener(aVoid -> finish());
+        }
+    }
+
+    private void addItineraryDayView(TourModel.ItineraryInner item) {
+        View view = getLayoutInflater().inflate(R.layout.item_add_itinerary, layoutItineraryContainer, false);
+        
+        TextView txtDayLabel = view.findViewById(R.id.txtDayLabel);
+        TextInputEditText edtItineraryContent = view.findViewById(R.id.edtItineraryContent);
+        ImageButton btnDeleteDay = view.findViewById(R.id.btnDeleteDay);
+        
+        if (item != null) {
+            edtItineraryContent.setText(item.getContent());
+        }
+        
+        btnDeleteDay.setOnClickListener(v -> {
+            layoutItineraryContainer.removeView(view);
+            updateItineraryDays();
+        });
+        
+        layoutItineraryContainer.addView(view);
+        updateItineraryDays();
+    }
+
+    private void updateItineraryDays() {
+        for (int i = 0; i < layoutItineraryContainer.getChildCount(); i++) {
+            View view = layoutItineraryContainer.getChildAt(i);
+            TextView txtDayLabel = view.findViewById(R.id.txtDayLabel);
+            if (txtDayLabel != null) {
+                txtDayLabel.setText("Ngày " + (i + 1));
+            }
         }
     }
 }

@@ -8,17 +8,17 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.travelapp.R;
 import com.example.travelapp.adapters.TourAdapter;
-import com.example.travelapp.viewmodels.TourViewModel;
+import com.example.travelapp.repositories.TourRepository;
+import java.util.Collections;
 
 public class HomeFragment extends Fragment {
     private RecyclerView rvFeaturedTours;
     private TextView txtEmptyHome;
-    private TourViewModel viewModel;
+    private final TourRepository repository = new TourRepository();
 
     @Nullable
     @Override
@@ -31,22 +31,26 @@ public class HomeFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         rvFeaturedTours = view.findViewById(R.id.rvFeaturedTours);
         txtEmptyHome = view.findViewById(R.id.txtEmptyHome);
-        rvFeaturedTours.setLayoutManager(new LinearLayoutManager(getContext()));
-        rvFeaturedTours.setAdapter(new TourAdapter(java.util.Collections.emptyList()));
+        
+        // Sử dụng GridLayoutManager để hiển thị dạng lưới (Grid) thay vì danh sách dọc
+        // Số 2 ở đây là số cột (spanCount)
+        rvFeaturedTours.setLayoutManager(new GridLayoutManager(getContext(), 2));
+        rvFeaturedTours.setAdapter(new TourAdapter(Collections.emptyList()));
 
         if (txtEmptyHome != null) {
             txtEmptyHome.setText("Dang tai tour...");
             txtEmptyHome.setVisibility(View.VISIBLE);
         }
 
-        viewModel = new ViewModelProvider(this).get(TourViewModel.class);
-        viewModel.getFeaturedToursLiveData().observe(getViewLifecycleOwner(), tours -> {
+        // Direct fetch from Model/Repository (MVC pattern)
+        repository.getFeaturedTours(tours -> {
+            if (getActivity() == null) return;
             boolean hasData = tours != null && !tours.isEmpty();
             if (txtEmptyHome != null) {
                 txtEmptyHome.setText(hasData ? "" : "Chua co tour noi bat");
                 txtEmptyHome.setVisibility(hasData ? View.GONE : View.VISIBLE);
             }
-            rvFeaturedTours.setAdapter(new TourAdapter(tours != null ? tours : java.util.Collections.emptyList()));
+            rvFeaturedTours.setAdapter(new TourAdapter(tours != null ? tours : Collections.emptyList()));
         });
     }
 }

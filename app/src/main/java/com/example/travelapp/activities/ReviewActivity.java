@@ -50,34 +50,51 @@ public class ReviewActivity extends AppCompatActivity {
                 .whereEqualTo("userId", userId)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    boolean hasPaid = false;
+                    int paidBookingsCount = 0;
                     for (DocumentSnapshot doc : queryDocumentSnapshots) {
                         String status = doc.getString("paymentStatus");
                         if ("PAID".equalsIgnoreCase(status) || "SUCCESS".equalsIgnoreCase(status)) {
-                            hasPaid = true;
-                            break;
+                            paidBookingsCount++;
                         }
                     }
 
-                    if (!hasPaid) {
+                    if (paidBookingsCount == 0) {
                         Toast.makeText(this, "Bạn chưa thanh toán tour này, không thể viết đánh giá!", Toast.LENGTH_LONG).show();
                         btnSubmitReview.setEnabled(true);
                         return;
                     }
 
-                    // Nếu đã thanh toán, lấy tên người dùng và lưu đánh giá
-                    db.collection("users").document(userId).get().addOnSuccessListener(documentSnapshot -> {
-                        String reviewerName = "Người dùng";
-                        if (documentSnapshot.exists()) {
-                            String name = documentSnapshot.getString("name");
-                            if (name != null && !name.isEmpty()) {
-                                reviewerName = name;
-                            }
-                        }
-                        saveReviewToFirestore(rating, content, reviewerName);
-                    }).addOnFailureListener(e -> {
-                        saveReviewToFirestore(rating, content, "Người dùng");
-                    });
+                    // Kiểm tra xem đã đánh giá vượt quá số chuyến đi chưa
+                    int finalPaidBookingsCount = paidBookingsCount;
+                    db.collection("reviews")
+                            .whereEqualTo("tourId", tourId)
+                            .whereEqualTo("userId", userId)
+                            .get()
+                            .addOnSuccessListener(reviewSnapshots -> {
+                                int reviewsCount = reviewSnapshots.size();
+                                if (reviewsCount >= finalPaidBookingsCount) {
+                                    Toast.makeText(this, "Bạn đã đánh giá cho tất cả các chuyến đi của tour này rồi!", Toast.LENGTH_LONG).show();
+                                    btnSubmitReview.setEnabled(true);
+                                } else {
+                                    // Nếu còn lượt đánh giá, lấy tên người dùng và lưu đánh giá
+                                    db.collection("users").document(userId).get().addOnSuccessListener(documentSnapshot -> {
+                                        String reviewerName = "Người dùng";
+                                        if (documentSnapshot.exists()) {
+                                            String name = documentSnapshot.getString("name");
+                                            if (name != null && !name.isEmpty()) {
+                                                reviewerName = name;
+                                            }
+                                        }
+                                        saveReviewToFirestore(rating, content, reviewerName);
+                                    }).addOnFailureListener(e -> {
+                                        saveReviewToFirestore(rating, content, "Người dùng");
+                                    });
+                                }
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(this, "Lỗi kiểm tra lịch sử đánh giá: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                btnSubmitReview.setEnabled(true);
+                            });
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "Lỗi kiểm tra quyền đánh giá: " + e.getMessage(), Toast.LENGTH_SHORT).show();

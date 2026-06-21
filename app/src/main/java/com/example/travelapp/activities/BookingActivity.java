@@ -170,6 +170,12 @@ public class BookingActivity extends AppCompatActivity {
         String appTransId = Helper.getAppTransId();
         currentBookingDocId = "book_" + appTransId; // Lưu mã hóa đơn để chuẩn bị cập nhật sau thanh toán
 
+        // Lưu currentBookingDocId vào SharedPreferences đề phòng app bị giải phóng bộ nhớ
+        getSharedPreferences("ZaloPayPrefs", MODE_PRIVATE)
+                .edit()
+                .putString("currentBookingDocId", currentBookingDocId)
+                .apply();
+
         Map<String, Object> booking = new HashMap<>();
         booking.put("id", currentBookingDocId);
         booking.put("userId", userId);
@@ -191,6 +197,7 @@ public class BookingActivity extends AppCompatActivity {
                     Toast.makeText(this, "Đang khởi tạo liên kết ZaloPay...", Toast.LENGTH_SHORT).show();
                     new RequestZaloPayTokenTask().execute(appTransId, String.valueOf(totalAmount));
                 })
+
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "Tạo đơn hàng thất bại: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
@@ -203,11 +210,31 @@ public class BookingActivity extends AppCompatActivity {
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(this, "Đặt tour và thanh toán hoàn tất thành công!", Toast.LENGTH_LONG).show();
 
+                    // Xóa session trong SharedPreferences
+                    getSharedPreferences("ZaloPayPrefs", MODE_PRIVATE).edit().remove("currentBookingDocId").apply();
+                    currentBookingDocId = "";
+
                     // Chuyển hướng người dùng về trang chính sau khi thanh toán thành công
                     Intent intent = new Intent(BookingActivity.this, MainActivity.class);
                     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
                     finish();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Lỗi cập nhật trạng thái hóa đơn: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    // Hàm cập nhật trạng thái đơn hàng thất bại
+    private void updatePaymentStatusToFailed(String bookingDocId) {
+        db.collection("bookings").document(bookingDocId)
+                .update("paymentStatus", "FAILED")
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(this, "Thanh toán ZaloPay thất bại hoặc đã bị hủy!", Toast.LENGTH_LONG).show();
+
+                    // Xóa session trong SharedPreferences
+                    getSharedPreferences("ZaloPayPrefs", MODE_PRIVATE).edit().remove("currentBookingDocId").apply();
+                    currentBookingDocId = "";
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "Lỗi cập nhật trạng thái hóa đơn: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -226,14 +253,37 @@ public class BookingActivity extends AppCompatActivity {
         Intent intent = getIntent();
         Uri data = intent.getData();
 
-        // Kiểm tra xem ứng dụng được gọi ngược lại bằng Deep Link từ ZaloPay thành công không
+        // Phục hồi currentBookingDocId từ SharedPreferences nếu bị trống
+        if (currentBookingDocId == null || currentBookingDocId.isEmpty()) {
+            currentBookingDocId = getSharedPreferences("ZaloPayPrefs", MODE_PRIVATE)
+                    .getString("currentBookingDocId", "");
+        }
+
+        // Kiểm tra xem ứng dụng được gọi ngược lại bằng Deep Link từ ZaloPay không
         if (data != null && "travelapp".equals(data.getScheme()) && "payment".equals(data.getHost())) {
-            if (!currentBookingDocId.isEmpty()) {
-                updatePaymentStatusToSuccess(currentBookingDocId);
-                currentBookingDocId = ""; // Giải phóng dữ liệu phiên
+            String status = data.getQueryParameter("status");
+            if ("1".equals(status)) {
+                if (!currentBookingDocId.isEmpty()) {
+                    updatePaymentStatusToSuccess(currentBookingDocId);
+                }
+            } else {
+                if (!currentBookingDocId.isEmpty()) {
+                    updatePaymentStatusToFailed(currentBookingDocId);
+                }
             }
             intent.setData(null); // Clear liên kết để tránh lặp hàm khi xoay màn hình
+        } else {
+            // Nếu người dùng tự quay lại ứng dụng (bấm Back/Home) mà không qua deep link
+            if (!currentBookingDocId.isEmpty()) {
+                checkPaymentStatus();
+            }
         }
+    }
+
+    private void checkPaymentStatus() {
+        if (currentBookingDocId == null || currentBookingDocId.isEmpty()) return;
+        String appTransId = currentBookingDocId.replace("book_", "");
+        new QueryZaloPayStatusTask().execute(appTransId);
     }
 
     // --- TIẾN TRÌNH TRUY VẤN MẠNG GỌI CỔNG THANH TOÁN ZALOPAY ---
@@ -305,6 +355,65 @@ public class BookingActivity extends AppCompatActivity {
                 startActivity(intent);
             } else {
                 Toast.makeText(BookingActivity.this, "Không thể lấy cổng liên kết thanh toán ZaloPay! Vui lòng thử lại.", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    // --- TIẾN TRÌNH TRUY VẤN MẠNG GỌI CỔNG TRUY VẤN TRẠNG THÁI ZALOPAY ---
+    private class QueryZaloPayStatusTask extends AsyncTask<String, Void, Integer> {
+        @Override
+        protected Integer doInBackground(String... params) {
+            String appTransId = params[0];
+            try {
+                URL url = new URL("https://sb-openapi.zalopay.vn/v2/query");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                conn.setDoOutput(true);
+
+                String appId = String.valueOf(com.example.travelapp.Constant.AppInfo.APP_ID);
+                String macKey = com.example.travelapp.Constant.AppInfo.MAC_KEY;
+
+                // Cấu trúc chuỗi MAC truy vấn: app_id|app_trans_id|key1
+                String data = appId + "|" + appTransId + "|" + macKey;
+                String mac = Helper.hmacSHA256(data, macKey);
+
+                String urlParameters = "app_id=" + appId
+                        + "&app_trans_id=" + appTransId
+                        + "&mac=" + mac;
+
+                byte[] postData = urlParameters.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                conn.setRequestProperty("Content-Length", String.valueOf(postData.length));
+
+                DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
+                wr.write(postData);
+                wr.flush();
+                wr.close();
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) response.append(inputLine);
+                in.close();
+
+                JSONObject jsonObject = new JSONObject(response.toString());
+                if (jsonObject.has("return_code")) {
+                    return jsonObject.getInt("return_code");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return -1;
+        }
+
+        @Override
+        protected void onPostExecute(Integer returnCode) {
+            if (returnCode == 1) {
+                // Giao dịch thành công
+                updatePaymentStatusToSuccess(currentBookingDocId);
+            } else if (returnCode == 2) {
+                // Giao dịch thất bại
+                updatePaymentStatusToFailed(currentBookingDocId);
             }
         }
     }

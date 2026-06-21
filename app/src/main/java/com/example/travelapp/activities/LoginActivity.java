@@ -45,7 +45,27 @@ public class LoginActivity extends AppCompatActivity {
             String email = edtEmail.getText().toString().trim();
             String password = edtPassword.getText().toString().trim();
 
-            if (email.isEmpty() || password.isEmpty()) return;
+            boolean isValid = true;
+
+            if (email.isEmpty()) {
+                edtEmail.setError("Vui lòng nhập email");
+                edtEmail.requestFocus();
+                isValid = false;
+            } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                edtEmail.setError("Email không đúng định dạng");
+                edtEmail.requestFocus();
+                isValid = false;
+            }
+
+            if (password.isEmpty()) {
+                edtPassword.setError("Vui lòng nhập mật khẩu");
+                if (isValid) {
+                    edtPassword.requestFocus();
+                }
+                isValid = false;
+            }
+
+            if (!isValid) return;
 
             mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {

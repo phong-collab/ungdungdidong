@@ -117,6 +117,31 @@
                 android:layout_marginTop="12dp"
                 android:text="Featured Tour" />
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Lịch trình tour"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/layoutItineraryContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAddItineraryDay"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginTop="8dp"
+                android:text="Thêm ngày"
+                app:icon="@android:drawable/ic_input_add" />
+
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardSelectImage"
                 android:layout_width="match_parent"

@@ -5,14 +5,14 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.travelapp.R;
 import com.example.travelapp.activities.TourDetailActivity;
@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FavoritesFragment extends Fragment {
-    private RecyclerView rvFavorites;
+    private ListView rvFavorites;
     private FavoriteAdapter adapter;
     private List<TourModel> favoriteToursList;
     private FirebaseFirestore db;
@@ -44,7 +44,6 @@ public class FavoritesFragment extends Fragment {
         currentUserId = FirebaseAuth.getInstance().getCurrentUser() != null ? FirebaseAuth.getInstance().getCurrentUser().getUid() : "";
 
         rvFavorites = view.findViewById(R.id.rvFavorites);
-        rvFavorites.setLayoutManager(new LinearLayoutManager(getContext()));
 
         favoriteToursList = new ArrayList<>();
         adapter = new FavoriteAdapter(favoriteToursList);
@@ -101,37 +100,50 @@ public class FavoritesFragment extends Fragment {
                 });
     }
 
-    private class FavoriteAdapter extends RecyclerView.Adapter<FavoriteViewHolder> {
+    private class FavoriteAdapter extends BaseAdapter {
         private final List<TourModel> list;
 
         public FavoriteAdapter(List<TourModel> list) {
             this.list = list;
         }
 
-        @NonNull
         @Override
-        public FavoriteViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_tour_favorite, parent, false);
-            return new FavoriteViewHolder(v);
+        public int getCount() {
+            return list != null ? list.size() : 0;
         }
 
         @Override
-        public void onBindViewHolder(@NonNull FavoriteViewHolder holder, int position) {
-            // Sử dụng holder.getAdapterPosition() thay cho biến position cũ để tuyệt đối không bị lệch index mảng
-            int currentPos = holder.getAdapterPosition();
-            if (currentPos == RecyclerView.NO_POSITION) return;
+        public Object getItem(int position) {
+            return list != null ? list.get(position) : null;
+        }
 
-            TourModel tour = list.get(currentPos);
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            FavoriteViewHolder holder;
+            if (convertView == null) {
+                convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_tour_favorite, parent, false);
+                holder = new FavoriteViewHolder(convertView);
+                convertView.setTag(holder);
+            } else {
+                holder = (FavoriteViewHolder) convertView.getTag();
+            }
+
+            TourModel tour = list.get(position);
             holder.txtFavTitle.setText(tour.getTitle());
             holder.txtFavPrice.setText(String.format("%,d đ/người", tour.getPriceAdult()));
 
             String thumbUrl = tour.getThumbnail();
             if (thumbUrl == null || thumbUrl.trim().isEmpty()) {
-                Glide.with(holder.itemView.getContext())
+                Glide.with(parent.getContext())
                         .load(android.R.drawable.ic_menu_gallery)
                         .into(holder.imgFavThumbnail);
             } else {
-                Glide.with(holder.itemView.getContext())
+                Glide.with(parent.getContext())
                         .load(thumbUrl)
                         .placeholder(android.R.drawable.ic_menu_gallery)
                         .error(android.R.drawable.ic_menu_report_image)
@@ -139,45 +151,35 @@ public class FavoritesFragment extends Fragment {
             }
 
             // Bấm vào nguyên dòng để xem chi tiết
-            holder.itemView.setOnClickListener(v -> {
-                int p = holder.getAdapterPosition();
-                if (p != RecyclerView.NO_POSITION) {
-                    TourModel clickedTour = list.get(p);
-                    Intent intent = new Intent(getContext(), TourDetailActivity.class);
-                    intent.putExtra("tourId", clickedTour.getId());
-                    startActivity(intent);
-                }
+            convertView.setOnClickListener(v -> {
+                Intent intent = new Intent(getContext(), TourDetailActivity.class);
+                intent.putExtra("tourId", tour.getId());
+                // Cũng truyền "TOUR_ID" cho đồng bộ
+                intent.putExtra("TOUR_ID", tour.getId());
+                startActivity(intent);
             });
 
             // Bấm nút xóa (thùng rác)
             holder.btnRemoveFav.setOnClickListener(v -> {
-                int p = holder.getAdapterPosition();
-                if (p != RecyclerView.NO_POSITION) {
-                    TourModel clickedTour = list.get(p);
-                    String favDocId = clickedTour.getDescription();
-                    if (favDocId != null && !favDocId.isEmpty()) {
-                        db.collection("favorites").document(favDocId).delete()
-                                .addOnSuccessListener(aVoid -> {
-                                    Toast.makeText(getContext(), "Đã xóa khỏi danh sách yêu thích", Toast.LENGTH_SHORT).show();
-                                });
-                    }
+                String favDocId = tour.getDescription();
+                if (favDocId != null && !favDocId.isEmpty()) {
+                    db.collection("favorites").document(favDocId).delete()
+                            .addOnSuccessListener(aVoid -> {
+                                Toast.makeText(getContext(), "Đã xóa khỏi danh sách yêu thích", Toast.LENGTH_SHORT).show();
+                            });
                 }
             });
-        }
 
-        @Override
-        public int getItemCount() {
-            return list.size();
+            return convertView;
         }
     }
 
-    private static class FavoriteViewHolder extends RecyclerView.ViewHolder {
+    private static class FavoriteViewHolder {
         ImageView imgFavThumbnail;
         TextView txtFavTitle, txtFavPrice;
         android.widget.ImageButton btnRemoveFav;
 
         public FavoriteViewHolder(@NonNull View itemView) {
-            super(itemView);
             imgFavThumbnail = itemView.findViewById(R.id.imgFavThumbnail);
             txtFavTitle = itemView.findViewById(R.id.txtFavTitle);
             txtFavPrice = itemView.findViewById(R.id.txtFavPrice);

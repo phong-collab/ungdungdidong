@@ -1,7 +1,5 @@
 package com.example.travelapp.repositories;
 
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.example.travelapp.models.TourModel;
@@ -11,9 +9,11 @@ import java.util.List;
 public class TourRepository {
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-    public LiveData<List<TourModel>> getFeaturedTours() {
-        MutableLiveData<List<TourModel>> liveData = new MutableLiveData<>();
-        liveData.setValue(new ArrayList<>());
+    public interface Callback<T> {
+        void onResult(T result);
+    }
+
+    public void getFeaturedTours(Callback<List<TourModel>> callback) {
         db.collection("tours").whereEqualTo("isFeatured", true).get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 List<TourModel> list = new ArrayList<>();
@@ -24,11 +24,10 @@ public class TourRepository {
                         list.add(tour);
                     }
                 }
-                liveData.setValue(list);
+                callback.onResult(list);
             } else {
-                liveData.setValue(new ArrayList<>());
+                callback.onResult(new ArrayList<>());
             }
-        }).addOnFailureListener(e -> liveData.setValue(new ArrayList<>()));
-        return liveData;
+        }).addOnFailureListener(e -> callback.onResult(new ArrayList<>()));
     }
 }

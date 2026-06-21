@@ -7,12 +7,11 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -33,12 +32,12 @@ public class TourDetailActivity extends AppCompatActivity {
     private ImageButton btnBack;
     private TextView txtDetailTitle, txtDetailPrice, txtDetailDescription;
     private CheckBox btnFavorite;
-    private RecyclerView rvItinerary;
+    private ListView rvItinerary;
     private Button btnBookNow;
     private FirebaseFirestore db;
     private String tourId, userId;
 
-    private RecyclerView rvTourReviews;
+    private ListView rvTourReviews;
     private TextView txtReviewsHeader, txtNoReviews;
     private Button btnWriteReview;
     private List<ReviewModel> reviewList;
@@ -77,16 +76,12 @@ public class TourDetailActivity extends AppCompatActivity {
         rvItinerary = findViewById(R.id.rvItinerary);
         btnBookNow = findViewById(R.id.btnBookNow);
 
-        // 4. Cấu hình RecyclerView hiển thị lịch trình tour
-        rvItinerary.setLayoutManager(new LinearLayoutManager(this));
-
         // Khởi tạo các thành phần giao diện đánh giá
         rvTourReviews = findViewById(R.id.rvTourReviews);
         txtReviewsHeader = findViewById(R.id.txtReviewsHeader);
         txtNoReviews = findViewById(R.id.txtNoReviews);
         btnWriteReview = findViewById(R.id.btnWriteReview);
 
-        rvTourReviews.setLayoutManager(new LinearLayoutManager(this));
         reviewList = new ArrayList<>();
         tourReviewAdapter = new TourReviewAdapter(reviewList);
         rvTourReviews.setAdapter(tourReviewAdapter);
@@ -129,7 +124,7 @@ public class TourDetailActivity extends AppCompatActivity {
                                     .error(android.R.drawable.ic_menu_report_image)
                                     .into(imgDetailThumbnail);
 
-                            // Đổ danh sách lịch trình con vào RecyclerView (Nếu có)
+                            // Đổ danh sách lịch trình con vào ListView (Nếu có)
                             if (tour.getItinerary() != null) {
                                 rvItinerary.setAdapter(new ItineraryAdapter(tour.getItinerary()));
                             }
@@ -197,16 +192,29 @@ public class TourDetailActivity extends AppCompatActivity {
                 .whereEqualTo("userId", userId)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    boolean hasPaid = false;
+                    int paidBookingsCount = 0;
                     for (DocumentSnapshot doc : queryDocumentSnapshots) {
                         String status = doc.getString("paymentStatus");
                         if ("PAID".equalsIgnoreCase(status) || "SUCCESS".equalsIgnoreCase(status)) {
-                            hasPaid = true;
-                            break;
+                            paidBookingsCount++;
                         }
                     }
-                    if (hasPaid) {
-                        btnWriteReview.setVisibility(View.VISIBLE);
+
+                    if (paidBookingsCount > 0) {
+                        int finalPaidBookingsCount = paidBookingsCount;
+                        db.collection("reviews")
+                                .whereEqualTo("tourId", tourId)
+                                .whereEqualTo("userId", userId)
+                                .get()
+                                .addOnSuccessListener(reviewSnapshots -> {
+                                    int reviewsCount = reviewSnapshots.size();
+                                    if (reviewsCount >= finalPaidBookingsCount) {
+                                        btnWriteReview.setVisibility(View.GONE);
+                                    } else {
+                                        btnWriteReview.setVisibility(View.VISIBLE);
+                                    }
+                                })
+                                .addOnFailureListener(e -> btnWriteReview.setVisibility(View.GONE));
                     } else {
                         btnWriteReview.setVisibility(View.GONE);
                     }

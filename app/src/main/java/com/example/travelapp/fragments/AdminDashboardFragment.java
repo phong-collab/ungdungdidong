@@ -5,14 +5,14 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.ImageButton;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.travelapp.R;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -26,7 +26,7 @@ public class AdminDashboardFragment extends Fragment {
 
     private ImageButton btnBack;
     private TextView txtTotalRevenue, txtTotalUsers, txtTotalTours, txtNoPopularTours;
-    private RecyclerView rvPopularTours;
+    private ListView rvPopularTours;
     private FirebaseFirestore db;
 
     @Nullable
@@ -42,8 +42,6 @@ public class AdminDashboardFragment extends Fragment {
         txtTotalTours = view.findViewById(R.id.txtTotalTours);
         txtNoPopularTours = view.findViewById(R.id.txtNoPopularTours);
         rvPopularTours = view.findViewById(R.id.rvPopularTours);
-
-        rvPopularTours.setLayoutManager(new LinearLayoutManager(getContext()));
 
         btnBack.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
@@ -147,22 +145,39 @@ public class AdminDashboardFragment extends Fragment {
     }
 
     // --- ADAPTER NỘI BỘ HIỂN THỊ DANH SÁCH BẢNG XẾP HẠNG ---
-    private static class PopularTourAdapter extends RecyclerView.Adapter<PopularTourAdapter.ViewHolder> {
+    private static class PopularTourAdapter extends BaseAdapter {
         private final List<PopularTourModel> list;
 
         public PopularTourAdapter(List<PopularTourModel> list) {
             this.list = list;
         }
 
-        @NonNull
         @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_popular_tour, parent, false);
-            return new ViewHolder(v);
+        public int getCount() {
+            return list != null ? list.size() : 0;
         }
 
         @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        public Object getItem(int position) {
+            return list != null ? list.get(position) : null;
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            ViewHolder holder;
+            if (convertView == null) {
+                convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_popular_tour, parent, false);
+                holder = new ViewHolder(convertView);
+                convertView.setTag(holder);
+            } else {
+                holder = (ViewHolder) convertView.getTag();
+            }
+
             PopularTourModel item = list.get(position);
             holder.tvRank.setText(String.valueOf(position + 1));
             holder.tvTourTitle.setText(item.tourTitle);
@@ -178,9 +193,10 @@ public class AdminDashboardFragment extends Fragment {
             } else {
                 holder.tvRank.setBackgroundColor(Color_Parse("#E0E0E0")); // Xám - hạng dưới
             }
+
+            return convertView;
         }
 
-        // Hàm parse màu an toàn tránh crash nếu không tìm thấy thư viện hoặc cấu hình
         private int Color_Parse(String colorString) {
             try {
                 return android.graphics.Color.parseColor(colorString);
@@ -189,16 +205,10 @@ public class AdminDashboardFragment extends Fragment {
             }
         }
 
-        @Override
-        public int getItemCount() {
-            return list != null ? list.size() : 0;
-        }
-
-        static class ViewHolder extends RecyclerView.ViewHolder {
+        static class ViewHolder {
             TextView tvRank, tvTourTitle, tvBookingCount;
 
-            public ViewHolder(@NonNull View itemView) {
-                super(itemView);
+            public ViewHolder(View itemView) {
                 tvRank = itemView.findViewById(R.id.tvRank);
                 tvTourTitle = itemView.findViewById(R.id.tvTourTitle);
                 tvBookingCount = itemView.findViewById(R.id.tvBookingCount);
@@ -257,10 +267,9 @@ public class AdminDashboardFragment extends Fragment {
         View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_list, null);
 
         TextView tvTitle = view.findViewById(R.id.tvDialogTitle);
-        RecyclerView rvList = view.findViewById(R.id.rvDialogList);
+        ListView rvList = view.findViewById(R.id.rvDialogList);
 
         tvTitle.setText(title);
-        rvList.setLayoutManager(new LinearLayoutManager(getContext()));
         rvList.setAdapter(new GenericDialogAdapter(data, hasImage));
 
         builder.setView(view);
@@ -270,7 +279,7 @@ public class AdminDashboardFragment extends Fragment {
         dialog.show();
     }
 
-    private static class GenericDialogAdapter extends RecyclerView.Adapter<GenericDialogAdapter.ViewHolder> {
+    private static class GenericDialogAdapter extends BaseAdapter {
         private final List<Map<String, String>> list;
         private final boolean hasImage;
 
@@ -279,15 +288,32 @@ public class AdminDashboardFragment extends Fragment {
             this.hasImage = hasImage;
         }
 
-        @NonNull
         @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_dialog_row, parent, false);
-            return new ViewHolder(v);
+        public int getCount() {
+            return list != null ? list.size() : 0;
         }
 
         @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        public Object getItem(int position) {
+            return list != null ? list.get(position) : null;
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            ViewHolder holder;
+            if (convertView == null) {
+                convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_dialog_row, parent, false);
+                holder = new ViewHolder(convertView);
+                convertView.setTag(holder);
+            } else {
+                holder = (ViewHolder) convertView.getTag();
+            }
+
             Map<String, String> item = list.get(position);
             holder.tvTitle.setText(item.get("title"));
             holder.tvSubtitle1.setText(item.get("subtitle1"));
@@ -297,7 +323,7 @@ public class AdminDashboardFragment extends Fragment {
                 holder.cardImage.setVisibility(View.VISIBLE);
                 String imageUrl = item.get("imageUrl");
                 if (imageUrl != null && !imageUrl.isEmpty()) {
-                    Glide.with(holder.itemView.getContext())
+                    Glide.with(parent.getContext())
                             .load(imageUrl)
                             .placeholder(android.R.drawable.ic_menu_gallery)
                             .error(android.R.drawable.ic_menu_report_image)
@@ -308,20 +334,16 @@ public class AdminDashboardFragment extends Fragment {
             } else {
                 holder.cardImage.setVisibility(View.GONE);
             }
+
+            return convertView;
         }
 
-        @Override
-        public int getItemCount() {
-            return list != null ? list.size() : 0;
-        }
-
-        static class ViewHolder extends RecyclerView.ViewHolder {
+        static class ViewHolder {
             View cardImage;
             android.widget.ImageView imgRow;
             TextView tvTitle, tvSubtitle1, tvSubtitle2;
 
-            public ViewHolder(@NonNull View itemView) {
-                super(itemView);
+            public ViewHolder(View itemView) {
                 cardImage = itemView.findViewById(R.id.cardRowImage);
                 imgRow = itemView.findViewById(R.id.imgRow);
                 tvTitle = itemView.findViewById(R.id.tvRowTitle);

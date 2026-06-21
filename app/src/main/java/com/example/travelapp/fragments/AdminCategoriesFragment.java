@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -16,8 +17,6 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.cloudinary.android.MediaManager;
@@ -40,7 +39,7 @@ import java.util.Map;
 
 public class AdminCategoriesFragment extends Fragment {
 
-    private RecyclerView rvCategories;
+    private ListView rvCategories;
     private FloatingActionButton fabAddCategory;
     private FirebaseFirestore db;
     private List<CategoryModel> categoryList;
@@ -82,7 +81,6 @@ public class AdminCategoriesFragment extends Fragment {
             }
         });
 
-        rvCategories.setLayoutManager(new LinearLayoutManager(getContext()));
         rvCategories.setAdapter(adapter);
 
         fabAddCategory.setOnClickListener(v -> showAddCategoryDialog());

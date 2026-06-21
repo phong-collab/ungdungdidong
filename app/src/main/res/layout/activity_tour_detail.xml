@@ -100,13 +100,15 @@
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
-            <androidx.recyclerview.widget.RecyclerView
+            <com.example.travelapp.utils.NonScrollListView
                 android:id="@+id/rvItinerary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="8dp"
-                android:nestedScrollingEnabled="false" />
+                android:divider="@null"
+                android:dividerHeight="0dp"
+                android:scrollbars="none" />
 
             <!-- Divider -->
             <View
@@ -148,12 +150,14 @@
                         android:visibility="gone" />
                 </RelativeLayout>
 
-                <androidx.recyclerview.widget.RecyclerView
+                <com.example.travelapp.utils.NonScrollListView
                     android:id="@+id/rvTourReviews"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:nestedScrollingEnabled="false" />
+                    android:divider="@null"
+                    android:dividerHeight="0dp"
+                    android:scrollbars="none" />
 
                 <TextView
                     android:id="@+id/txtNoReviews"

@@ -186,11 +186,13 @@
                         android:textStyle="bold"
                         android:layout_marginBottom="12dp" />
 
-                    <androidx.recyclerview.widget.RecyclerView
+                    <com.example.travelapp.utils.NonScrollListView
                         android:id="@+id/rvPopularTours"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:nestedScrollingEnabled="false" />
+                        android:divider="@null"
+                        android:dividerHeight="0dp"
+                        android:scrollbars="none" />
 
                     <TextView
                         android:id="@+id/txtNoPopularTours"

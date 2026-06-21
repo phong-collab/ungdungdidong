@@ -1,0 +1,63 @@
+===================================================================
+TỔNG HỢP MẪU THIẾT KẾ (DESIGN PATTERNS) VÀ KIẾN TRÚC HỆ THỐNG TRONG TRAVELAPP
+===================================================================
+
+Dự án Android TravelApp của bạn kết hợp các mẫu thiết kế hướng đối tượng kinh điển và mẫu kiến trúc hệ thống hiện đại để tách biệt các tầng xử lý dữ liệu, nghiệp vụ logic và giao diện người dùng.
+
+-------------------------------------------------------------------
+PHẦN 1: CÁC MẪU THIẾT KẾ (DESIGN PATTERNS)
+-------------------------------------------------------------------
+
+1. Singleton Pattern (Mẫu đơn khởi tạo)
+   - Vị trí áp dụng: Firebase SDK khởi trị dịch vụ.
+   - Chi tiết: Lớp `FirebaseFirestore` và `FirebaseAuth` ngăn không cho khởi tạo thủ công bằng từ khóa 'new', thay vào đó chỉ cấp phát một đối tượng duy nhất chạy xuyên suốt vòng đời ứng dụng thông qua phương thức tĩnh `.getInstance()`.
+   - Ví dụ:
+     * `db = FirebaseFirestore.getInstance();` (trong BookingActivity.java, MainActivity.java, v.v.)
+     * `FirebaseAuth.getInstance().getCurrentUser().getUid();`
+
+2. Builder Pattern (Mẫu xây dựng đối tượng)
+   - Vị trí áp dụng:
+     * Xây dựng dữ liệu gửi đi (Request Body) cho ZaloPay API trong `CreateOrder.java`.
+     * Xây dựng các hộp thoại hệ thống `DatePickerDialog` trong `BookingActivity.java`.
+   - Chi tiết: Cho phép cấu hình từng tham số riêng lẻ của một đối tượng phức tạp thông qua cơ chế nối chuỗi (chaining methods) và hoàn tất khởi tạo bằng phương thức `.build()` hoặc hiển thị bằng `.show()`.
+   - Ví dụ:
+     * `RequestBody formBody = new FormBody.Builder().add("appid", ...).add("amount", ...).build();`
+     * Khởi tạo `DatePickerDialog` bằng các tham số context, listener, ngày/tháng/năm và gọi `.show()`.
+
+3. Adapter Pattern (Mẫu bộ chuyển đổi)
+   - Vị trí áp dụng: Các danh sách cuộn ListView và GridView trong ứng dụng (`BookingAdapter`, `AdminBookingAdapter`, `TourReviewAdapter`...).
+   - Chi tiết: Hoạt động như một cầu nối trung gian chuyển đổi nguồn dữ liệu thô (List các Model dạng đối tượng như `BookingModel`) thành giao diện View hiển thị trực quan (`item_booking.xml`).
+   - Ví dụ:
+     * Lớp `BookingAdapter` kế thừa `BaseAdapter`
+     * Hàm `getView()` tạo hoặc tái sử dụng View hiển thị (sử dụng cấu trúc ViewHolder để tối ưu hóa) và đổ dữ liệu thuộc tính từ Model vào View hiển thị.
+
+4. Observer / Callback Pattern (Mẫu quan sát / Bộ lắng nghe)
+   - Vị trí áp dụng:
+     * Đọc/Ghi cơ sở dữ liệu Firestore bất đồng bộ.
+     * Truyền phát các tương tác nút bấm từ Adapter về Fragment quản lý.
+   - Chi tiết: Định nghĩa mối quan hệ phụ thuộc một-nhiều. Khi dữ liệu trên máy chủ thay đổi hoặc có sự kiện người dùng, đối tượng quan sát (Listener/Interface) sẽ tự động được thông báo để xử lý.
+   - Ví dụ:
+     * Bộ lắng nghe Firebase: `.addOnSuccessListener(aVoid -> { ... })` và `.addOnFailureListener(e -> { ... })`.
+     * Custom Interface: Định nghĩa `interface OnBookingActionListener` trong `AdminBookingAdapter` và gán sự kiện click nút để gọi hàm callback tương ứng bên `AdminBookingsFragment`.
+
+5. Template Method Pattern (Mẫu phương thức khuôn mẫu)
+   - Vị trí áp dụng: Tiến trình gọi API thanh toán ZaloPay Sandbox chạy ngầm.
+   - Chi tiết: Lớp con `RequestZaloPayTokenTask` kế thừa từ `AsyncTask` của Android SDK. Lớp cha định nghĩa sẵn bộ khung thuật toán chạy bất đồng bộ (luồng nền -> luồng chính UI), lớp con chỉ cần định nghĩa hành vi cụ thể ở các bước `doInBackground()` và `onPostExecute()`.
+
+-------------------------------------------------------------------
+PHẦN 2: KIẾN TRÚC HỆ THỐNG (ARCHITECTURAL PATTERNS)
+-------------------------------------------------------------------
+
+Dự án áp dụng Kiến trúc MVC (Model - View - Controller) truyền thống, được tổ chức phân chia rõ ràng thành các lớp thành phần:
+
+1. Model (Mô hình dữ liệu)
+   - Vị trí áp dụng: Các lớp thực thể dữ liệu (`TourModel.java`, `BookingModel.java`, `ReviewModel.java`, `UserModel.java`...) và lớp truy xuất dữ liệu `TourRepository.java`.
+   - Vai trò: Lưu trữ trạng thái thông tin, xử lý cấu trúc dữ liệu và thực hiện các thao tác đọc/ghi cơ sở dữ liệu Firestore thông qua cơ chế bất đồng bộ Callback.
+
+2. View (Giao diện hiển thị)
+   - Vị trí áp dụng: Các tệp layout XML định nghĩa giao diện người dùng nằm trong thư mục `res/layout` (như `activity_booking.xml`, `fragment_home.xml`, `item_booking.xml`...).
+   - Vai trò: Định hình cách hiển thị thông tin và nhận các tương tác trực tiếp của người dùng.
+
+3. Controller (Bộ điều khiển)
+   - Vị trí áp dụng: Các lớp `Activity` và `Fragment` (`BookingActivity.java`, `HomeFragment.java`, `TourDetailActivity.java`...).
+   - Vai trò: Đóng vai trò là cầu nối điều phối giữa Model và View. Lấy dữ liệu từ Model bằng các cuộc gọi hàm Callback và trực tiếp gán dữ liệu đó lên View thông qua cơ chế ánh xạ (`findViewById`) và cập nhật trạng thái UI.

@@ -4,18 +4,16 @@ import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.travelapp.R;
 import com.example.travelapp.models.BookingModel;
 import java.util.List;
 
-public class AdminBookingAdapter extends RecyclerView.Adapter<AdminBookingAdapter.ViewHolder> {
-
+public class AdminBookingAdapter extends BaseAdapter {
     private final List<BookingModel> bookingList;
     private final OnBookingActionListener listener;
 
@@ -29,15 +27,32 @@ public class AdminBookingAdapter extends RecyclerView.Adapter<AdminBookingAdapte
         this.listener = listener;
     }
 
-    @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_admin_booking, parent, false);
-        return new ViewHolder(view);
+    public int getCount() {
+        return bookingList != null ? bookingList.size() : 0;
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+    public Object getItem(int position) {
+        return bookingList != null ? bookingList.get(position) : null;
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        ViewHolder holder;
+        if (convertView == null) {
+            convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_admin_booking, parent, false);
+            holder = new ViewHolder(convertView);
+            convertView.setTag(holder);
+        } else {
+            holder = (ViewHolder) convertView.getTag();
+        }
+
         BookingModel booking = bookingList.get(position);
 
         holder.tvBookingId.setText("Mã đơn: " + booking.getId());
@@ -54,7 +69,7 @@ public class AdminBookingAdapter extends RecyclerView.Adapter<AdminBookingAdapte
         
         holder.tvBookingPrice.setText(String.format("%,d đ", booking.getTotalPrice()));
 
-        Glide.with(holder.itemView.getContext())
+        Glide.with(parent.getContext())
                 .load(booking.getTourThumbnail())
                 .placeholder(android.R.drawable.ic_menu_gallery)
                 .error(android.R.drawable.ic_menu_report_image)
@@ -76,27 +91,23 @@ public class AdminBookingAdapter extends RecyclerView.Adapter<AdminBookingAdapte
 
         holder.btnConfirm.setOnClickListener(v -> listener.onConfirmClick(booking));
         holder.btnCancel.setOnClickListener(v -> listener.onCancelClick(booking));
+
+        return convertView;
     }
 
-    @Override
-    public int getItemCount() {
-        return bookingList != null ? bookingList.size() : 0;
-    }
-
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder {
         TextView tvBookingId, tvStatusBadge, tvBookingTitle, tvBookingUser, tvBookingPassengers, tvBookingPrice, tvBookingDate;
         ImageView imgBookingThum;
         Button btnConfirm, btnCancel;
- 
-        public ViewHolder(@NonNull View itemView) {
-            super(itemView);
+
+        public ViewHolder(View itemView) {
             tvBookingId = itemView.findViewById(R.id.tvAdminBookingId);
             tvStatusBadge = itemView.findViewById(R.id.tvAdminBookingStatusBadge);
             tvBookingTitle = itemView.findViewById(R.id.tvAdminBookingTitle);
             tvBookingUser = itemView.findViewById(R.id.tvAdminBookingUser);
             tvBookingPassengers = itemView.findViewById(R.id.tvAdminBookingPassengers);
             tvBookingPrice = itemView.findViewById(R.id.tvAdminBookingPrice);
-            tvBookingDate = itemView.findViewById(R.id.tvAdminBookingDate); // ĐÃ THÊM
+            tvBookingDate = itemView.findViewById(R.id.tvAdminBookingDate);
             imgBookingThum = itemView.findViewById(R.id.imgAdminBookingThum);
             btnConfirm = itemView.findViewById(R.id.btnAdminBookingConfirm);
             btnCancel = itemView.findViewById(R.id.btnAdminBookingCancel);

@@ -16,11 +16,14 @@
         android:background="@color/white"
         android:elevation="2dp"/>
 
-    <androidx.recyclerview.widget.RecyclerView
+    <ListView
         android:id="@+id/rvFavorites"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:paddingVertical="8dp"
-        android:clipToPadding="false"/>
+        android:clipToPadding="false"
+        android:divider="@null"
+        android:dividerHeight="0dp"
+        android:scrollbars="none" />
 
 </LinearLayout>

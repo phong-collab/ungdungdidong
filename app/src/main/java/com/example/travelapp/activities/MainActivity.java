@@ -92,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
                         bottomNavigation.inflateMenu(R.menu.menu_client);
                     }
                 })
+
                 .addOnFailureListener(e -> {
                     bottomNavigation.getMenu().clear();
                     bottomNavigation.inflateMenu(R.menu.menu_client);

@@ -17,7 +17,9 @@ import java.util.List;
 public class TourAdapter extends RecyclerView.Adapter<TourAdapter.TourViewHolder> {
     private final List<TourModel> list;
 
-    public TourAdapter(List<TourModel> list) { this.list = list; }
+    public TourAdapter(List<TourModel> list) {
+        this.list = list;
+    }
 
     @NonNull
     @Override
@@ -37,15 +39,20 @@ public class TourAdapter extends RecyclerView.Adapter<TourAdapter.TourViewHolder
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(v.getContext(), TourDetailActivity.class);
             intent.putExtra("TOUR_ID", item.getId());
+            intent.putExtra("tourId", item.getId());
             v.getContext().startActivity(intent);
         });
     }
 
     @Override
-    public int getItemCount() { return list != null ? list.size() : 0; }
+    public int getItemCount() {
+        return list != null ? list.size() : 0;
+    }
 
     static class TourViewHolder extends RecyclerView.ViewHolder {
-        ImageView imgTourThumbnail; TextView txtTourTitle, txtTourPrice;
+        ImageView imgTourThumbnail;
+        TextView txtTourTitle, txtTourPrice;
+
         public TourViewHolder(@NonNull View itemView) {
             super(itemView);
             imgTourThumbnail = itemView.findViewById(R.id.imgTourThumbnail);

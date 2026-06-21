@@ -3,10 +3,9 @@ package com.example.travelapp.adapters;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.RatingBar;
 import android.widget.TextView;
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
 import com.example.travelapp.R;
 import com.example.travelapp.models.ReviewModel;
 import java.text.SimpleDateFormat;
@@ -14,23 +13,39 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class TourReviewAdapter extends RecyclerView.Adapter<TourReviewAdapter.ViewHolder> {
-
+public class TourReviewAdapter extends BaseAdapter {
     private final List<ReviewModel> reviewList;
 
     public TourReviewAdapter(List<ReviewModel> reviewList) {
         this.reviewList = reviewList;
     }
 
-    @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_tour_review, parent, false);
-        return new ViewHolder(view);
+    public int getCount() {
+        return reviewList != null ? reviewList.size() : 0;
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+    public Object getItem(int position) {
+        return reviewList != null ? reviewList.get(position) : null;
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        ViewHolder holder;
+        if (convertView == null) {
+            convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_tour_review, parent, false);
+            holder = new ViewHolder(convertView);
+            convertView.setTag(holder);
+        } else {
+            holder = (ViewHolder) convertView.getTag();
+        }
+
         ReviewModel review = reviewList.get(position);
 
         String reviewer = review.getReviewerName();
@@ -48,19 +63,15 @@ public class TourReviewAdapter extends RecyclerView.Adapter<TourReviewAdapter.Vi
         } else {
             holder.tvDate.setText("");
         }
+
+        return convertView;
     }
 
-    @Override
-    public int getItemCount() {
-        return reviewList != null ? reviewList.size() : 0;
-    }
-
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder {
         TextView tvUser, tvDate, tvComment;
         RatingBar rbReview;
 
-        public ViewHolder(@NonNull View itemView) {
-            super(itemView);
+        public ViewHolder(View itemView) {
             tvUser = itemView.findViewById(R.id.tvReviewUser);
             tvDate = itemView.findViewById(R.id.tvReviewDate);
             tvComment = itemView.findViewById(R.id.tvReviewComment);

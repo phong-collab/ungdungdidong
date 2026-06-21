@@ -47,10 +47,57 @@ public class RegisterActivity extends AppCompatActivity {
             String phone = edtPhone.getText().toString().trim();
             String password = edtPassword.getText().toString().trim();
 
-            if (name.isEmpty() || email.isEmpty() || phone.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Vui lòng nhập đủ thông tin", Toast.LENGTH_SHORT).show();
-                return;
+            boolean isValid = true;
+
+            if (name.isEmpty()) {
+                edtName.setError("Vui lòng nhập họ và tên");
+                edtName.requestFocus();
+                isValid = false;
             }
+
+            if (email.isEmpty()) {
+                edtEmail.setError("Vui lòng nhập địa chỉ email");
+                if (isValid) {
+                    edtEmail.requestFocus();
+                }
+                isValid = false;
+            } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                edtEmail.setError("Email không đúng định dạng");
+                if (isValid) {
+                    edtEmail.requestFocus();
+                }
+                isValid = false;
+            }
+
+            if (phone.isEmpty()) {
+                edtPhone.setError("Vui lòng nhập số điện thoại");
+                if (isValid) {
+                    edtPhone.requestFocus();
+                }
+                isValid = false;
+            } else if (!phone.matches("^0[0-9]{9}$")) {
+                edtPhone.setError("Số điện thoại không hợp lệ (phải bắt đầu bằng số 0 và có 10 chữ số)");
+                if (isValid) {
+                    edtPhone.requestFocus();
+                }
+                isValid = false;
+            }
+
+            if (password.isEmpty()) {
+                edtPassword.setError("Vui lòng nhập mật khẩu");
+                if (isValid) {
+                    edtPassword.requestFocus();
+                }
+                isValid = false;
+            } else if (password.length() < 6) {
+                edtPassword.setError("Mật khẩu phải có ít nhất 6 ký tự");
+                if (isValid) {
+                    edtPassword.requestFocus();
+                }
+                isValid = false;
+            }
+
+            if (!isValid) return;
 
             mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
